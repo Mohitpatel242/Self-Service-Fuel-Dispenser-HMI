@@ -1,0 +1,22 @@
+# ESP-IDF build output
+/build/
+
+# Local configuration file.
+# It's better to commit a copy named 'sdkconfig.defaults' instead.
+# /sdkconfig
+
+# Visual Studio Code specific files
+.vscode/
+
+# Managed components downloaded by the IDF component manager.
+# Commit 'idf_component.yml' and 'dependencies.lock' instead.
+/components/
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
