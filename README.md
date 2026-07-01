@@ -1,31 +1,15 @@
-| Supported Targets | ESP32-S3 |
-| ----------------- | -------- |
+# Self-Service Fuel Dispenser ESP-IDF - Documentation
 
-| Supported LCD Controller    | ST7701 |
-| ----------------------------| -------|
+This document provides a detailed overview of the Self-Service Fuel Dispenser project, built using the ESP-IDF framework and the LVGL library for the user interface.
 
-| Supported Touch Controller  |  GT911 |
-| ----------------------------| -------|
+## Table of Contents
 
-# RGB Avoid Tearing Example
-
-[esp_lcd](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/lcd.html) provides several panel drivers out-of box, e.g. ST7789, SSD1306, NT35510. However, there're a lot of other panels on the market, it's beyond `esp_lcd` component's responsibility to include them all.
-
-`esp_lcd` allows user to add their own panel drivers in the project scope (i.e. panel driver can live outside of esp-idf), so that the upper layer code like LVGL porting code can be reused without any modifications, as long as user-implemented panel driver follows the interface defined in the `esp_lcd` component.
-
-This example demonstrates how to avoid tearing when using LVGL with RGB interface screens in an esp-idf project. The example will use the LVGL library to draw a stylish music player.
-
-This example uses the [esp_timer](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html) to generate the ticks needed by LVGL and uses a dedicated task to run the `lv_timer_handler()`. Since the LVGL APIs are not thread-safe, this example uses a mutex which be invoked before the call of `lv_timer_handler()` and released after it. The same mutex needs to be used in other tasks and threads around every LVGL (lv_...) related function call and code. For more porting guides, please refer to [LVGL porting doc](https://docs.lvgl.io/master/porting/index.html).
-
-## How to use the example
-
-## ESP-IDF Required
-
-### Hardware Required
-
-* An ESP32-S3R8 development board
-* A ST7701 LCD panel, with RGB interface
-* An USB cable for power supply and programming
+1.  [Project Overview](./documentation/1_Project_Overview.md)
+2.  [System Architecture](./documentation/2_System_Architecture.md)
+3.  [Screen Flow & UI Logic](./documentation/3_Screen_Flow_and_UI_Logic.md)
+4.  [Backend](./documentation/4_Backend.md)
+5.  [Hardware Abstraction Layer](./documentation/5_Hardware_Abstraction_Layer.md)
+6.  [Building and Flashing](./documentation/6_Building_and_Flashing.md)
 
 ### Hardware Connection
 
