@@ -181,3 +181,11 @@ void action_payment_method_confirm(lv_event_t * e)
         lv_scr_load(objects.card_screen); // Just load the placeholder
     }
 }
+
+void action_payment_completed(lv_event_t * e) 
+{
+    ESP_LOGI("ACTIONS", "PICK-UP NOZZLE");
+    
+    // In the next step, we will load the Payment Method Screen here!
+    transition_to_nozzle_pikup();
+}

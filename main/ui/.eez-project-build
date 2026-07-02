@@ -12,6 +12,7 @@
     "ui.c",
     "ui.h",
     "ui_image_card_img.c",
+    "ui_image_nozzle_img.c",
     "ui_image_qr_img.c",
     "vars.h"
   ]

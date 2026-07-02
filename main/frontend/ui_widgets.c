@@ -11,6 +11,7 @@
 #include "extra/libs/qrcode/lv_qrcode.h"  // <-- ADD THIS LINE
 #include "ui_widgets.h"
   
+
 // --- Global Pointers for the Header ---
 static lv_obj_t * sys_header_panel;
 static lv_obj_t * date_label;

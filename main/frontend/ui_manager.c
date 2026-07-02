@@ -25,10 +25,16 @@
 
 static const char *UI_TAG = "UI_Manager";
 
+
 // Forward declarations
 void transition_to_mode_select(void);
 void transition_to_numpad(DispenseMode mode);
 void transition_to_confirm(void);
+
+
+// 2. Perform the automated calculations
+static float final_amount = 0.0f;
+static float final_volume = 0.0f;
 
 
 
@@ -181,10 +187,6 @@ void transition_to_confirm(void)
         return;
     }
 
-    // 2. Perform the automated calculations
-    float final_amount = 0.0f;
-    float final_volume = 0.0f;
-
     if (mode == MODE_AMOUNT) {
         final_amount = entered_value;
         final_volume = entered_value / active_data->rate; // Volume = Amount / Rate
@@ -285,7 +287,7 @@ void transition_to_qr_screen(void)
 
         // Final Amount
     if (objects.qr_label) {
-        char buf_amt[32];
+        char buf_amt[16];
         snprintf(buf_amt, sizeof(buf_amt), " %.2f Rs.", final_amount);
         lv_label_set_text(objects.qr_label, buf_amt);
     }
@@ -308,6 +310,58 @@ void transition_to_qr_screen(void)
 
 
 
+void transition_to_nozzle_pikup(void){
+
+    if (objects.nozzle_pikup_screen == NULL){
+        ESP_LOGE(UI_TAG, "Cannot load screen: nozzle pickup screen is missing.");
+        return;
+    } 
+
+        // 1. Get the data the user just selected from the Backend
+    NozzleData * active_data = get_active_transaction_nozzle();
+    
+    
+    if (objects.nozzle_pikup_active_nozzle_label) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->id);
+        lv_label_set_text(objects.nozzle_pikup_active_nozzle_label, buf);
+    }
+
+    // 3. Perform the actual screen switch!
+    lv_scr_load(objects.nozzle_pikup_screen);
+    // 
+}
+
+
+
+void transition_to_live_counting(void){
+    
+    if (objects.live_counting_screen == NULL){
+        ESP_LOGE(UI_TAG, "Cannot load screen: live counting screen is missing.");
+        return;
+    } 
+
+    // NozzleData * active_data = get_active_transaction_nozzle();
+    
+    // Final Amount
+    if (objects.live_counting_s_t_amount_lbl) {
+        char buf_amt[32];
+        snprintf(buf_amt, sizeof(buf_amt), " %.2f Rs.", final_amount);
+        lv_label_set_text(objects.live_counting_s_t_amount_lbl, buf_amt);
+    }
+    
+    // Final Volume
+    if (objects.live_counting_s_t_volume_lbl) {
+        char buf_vol[32];
+        snprintf(buf_vol, sizeof(buf_vol), "%.3f Liters", final_volume);
+        lv_label_set_text(objects.live_counting_s_t_volume_lbl, buf_vol);
+    }
+
+    // 3. Perform the actual screen switch!
+    lv_scr_load(objects.live_counting_screen);
+    // 
+}
+
 
 // 3. The Thread-Safe Startup Task
 static void startup_ui_task(void *pvParameter) 
@@ -318,7 +372,7 @@ static void startup_ui_task(void *pvParameter)
         ui_init(); // Boot the EEZ Studio generated code
 
         init_system_header();
-
+        
         generate_dynamic_panels(); // Inject our dynamic nozzle structs        
         lvgl_port_unlock(); 
     }
@@ -328,5 +382,6 @@ static void startup_ui_task(void *pvParameter)
 void start_ui_manager(void) 
 {
     // Huge 8192 stack size prevents string formatting crashes
+    
     xTaskCreate(startup_ui_task, "Startup_Task", 8192, NULL, 5, NULL);
 }

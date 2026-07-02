@@ -16,6 +16,7 @@ extern void action_confirm_pay(lv_event_t * e);
 extern void action_select_qr(lv_event_t * e);
 extern void action_select_card(lv_event_t * e);
 extern void action_payment_method_confirm(lv_event_t * e);
+extern void action_payment_completed(lv_event_t * e);
 
 #ifdef __cplusplus
 }

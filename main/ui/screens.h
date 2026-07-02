@@ -18,7 +18,9 @@ enum ScreensEnum {
     SCREEN_ID_PAYMENT_SCREEN = 5,
     SCREEN_ID_QR_SCREEN = 6,
     SCREEN_ID_CARD_SCREEN = 7,
-    _SCREEN_ID_LAST = 7
+    SCREEN_ID_NOZZLE_PIKUP_SCREEN = 8,
+    SCREEN_ID_LIVE_COUNTING_SCREEN = 9,
+    _SCREEN_ID_LAST = 9
 };
 
 typedef struct _objects_t {
@@ -29,6 +31,8 @@ typedef struct _objects_t {
     lv_obj_t *payment_screen;
     lv_obj_t *qr_screen;
     lv_obj_t *card_screen;
+    lv_obj_t *nozzle_pikup_screen;
+    lv_obj_t *live_counting_screen;
     lv_obj_t *header_panel;
     lv_obj_t *system_config_con;
     lv_obj_t *dispenser_num;
@@ -164,6 +168,41 @@ typedef struct _objects_t {
     lv_obj_t *card_screen_completed_btn;
     lv_obj_t *card_screen_completed_btn_label;
     lv_obj_t *card_screen_label;
+    lv_obj_t *header_panel_7;
+    lv_obj_t *system_config_con_6;
+    lv_obj_t *dispenser_num_6;
+    lv_obj_t *dispenser_serial_num_6;
+    lv_obj_t *header_label_7;
+    lv_obj_t *system_time_con_6;
+    lv_obj_t *date_label_6;
+    lv_obj_t *time_label_6;
+    lv_obj_t *live_counting_screen_con_1;
+    lv_obj_t *card_screen_label_3;
+    lv_obj_t *card_screen_label_2;
+    lv_obj_t *nozzle_pikup_active_nozzle_panel;
+    lv_obj_t *nozzle_pikup_active_nozzle_label;
+    lv_obj_t *header_panel_6;
+    lv_obj_t *system_config_con_5;
+    lv_obj_t *dispenser_num_5;
+    lv_obj_t *dispenser_serial_num_5;
+    lv_obj_t *header_label_6;
+    lv_obj_t *system_time_con_5;
+    lv_obj_t *date_label_5;
+    lv_obj_t *time_label_5;
+    lv_obj_t *live_counting_screen_con;
+    lv_obj_t *card_screen_label_1;
+    lv_obj_t *live_counting_screen_amount_panel;
+    lv_obj_t *live_counting_screen_amount_label;
+    lv_obj_t *live_counting_screen_volume_panel;
+    lv_obj_t *live_counting_screen_volume_label;
+    lv_obj_t *live_counting_screen_rs_label;
+    lv_obj_t *live_counting_screen_liter_label;
+    lv_obj_t *confirm_screen_t_amount_con_1;
+    lv_obj_t *obj4;
+    lv_obj_t *live_counting_s_t_amount_lbl;
+    lv_obj_t *confirm_screen_t_volume_con_1;
+    lv_obj_t *obj5;
+    lv_obj_t *live_counting_s_t_volume_lbl;
 } objects_t;
 
 extern objects_t objects;
@@ -189,6 +228,12 @@ void tick_screen_qr_screen();
 void create_screen_card_screen();
 void tick_screen_card_screen();
 
+void create_screen_nozzle_pikup_screen();
+void tick_screen_nozzle_pikup_screen();
+
+void create_screen_live_counting_screen();
+void tick_screen_live_counting_screen();
+
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);
 
@@ -206,9 +251,10 @@ enum Colors {
     COLOR_ID_BUTTON_COLOR,
     COLOR_ID_BUTTON_GRAD_COLOR,
     COLOR_ID_NOZZLE_PANEL_COLOR,
+    COLOR_ID_WHITE_TEXT,
 };
 void change_color_theme(uint32_t themeIndex);
-extern uint32_t theme_colors[1][6];
+extern uint32_t theme_colors[1][7];
 extern uint32_t active_theme_index;
 
 #ifdef __cplusplus
