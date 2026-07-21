@@ -21,8 +21,14 @@ void action_go_back(lv_event_t * e)
     lv_obj_t * current_screen = lv_scr_act();
 
     // If they are on Mode Select, take them back to the Main Screen
-    if (current_screen == objects.mode_select_screen) {
-        lv_scr_load(objects.main_screen); // Use whatever name you gave your home screen
+    if (current_screen == objects.display_select_screen) {
+        lv_scr_load(objects.main_dispenser_select_screen); // Use whatever name you gave your home screen
+    }
+    else if (current_screen == objects.nozzle_select_screen) {
+        lv_scr_load(objects.display_select_screen); // Use whatever name you gave your home screen
+    }
+    else if (current_screen == objects.mode_select_screen) {
+        lv_scr_load(objects.nozzle_select_screen); // Use whatever name you gave your home screen
     }
     // If they are on the Numpad Screen (Future), take them back to Mode Select
     else if (current_screen == objects.numpad_screen) {
@@ -47,6 +53,10 @@ void action_go_back(lv_event_t * e)
     // If they are on the Card Screen, take them back to the Payment Screen
     else if (current_screen == objects.card_screen) {
         lv_scr_load(objects.payment_screen);
+    }
+    // If they are on the Card Screen, take them back to the Payment Screen
+    else if (current_screen == objects.login_screen) {
+        lv_scr_load(objects.nozzle_select_screen);
     }
 }
 
@@ -88,11 +98,11 @@ void action_numpad_ready(lv_event_t * e)
     set_transaction_value(entered_value);
     
     // 4. Log the transaction details so far!
-    NozzleData * active_nozzle = get_active_transaction_nozzle();
+    NozzleNode * active_nozzle = get_active_nozzle();
     DispenseMode mode = get_transaction_mode();
     
     ESP_LOGI("TRANSACTION", "=====================================");
-    ESP_LOGI("TRANSACTION", " FUEL: %s (Nozzle %d)", active_nozzle->product_name, active_nozzle->id);
+    ESP_LOGI("TRANSACTION", " FUEL: %s (Nozzle %d)", active_nozzle->fuel_type, active_nozzle->nozzle_id);
     ESP_LOGI("TRANSACTION", " MODE: %s", (mode == MODE_AMOUNT) ? "By Amount" : "By Volume");
     ESP_LOGI("TRANSACTION", " VALUE: %.2f", entered_value);
     ESP_LOGI("TRANSACTION", "=====================================");
@@ -188,4 +198,16 @@ void action_payment_completed(lv_event_t * e)
     
     // In the next step, we will load the Payment Method Screen here!
     transition_to_nozzle_pikup();
+}
+
+
+void action_goto_settings(lv_event_t * e){
+    
+    ESP_LOGI("ACTIONS", "Loading Setting page");
+}
+
+
+void action_config_login(lv_event_t * e){
+    ESP_LOGI("ACTIONS", "Loading Setting Login");
+    transition_to_login_screen();
 }

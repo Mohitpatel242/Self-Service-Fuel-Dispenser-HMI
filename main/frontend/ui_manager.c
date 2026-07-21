@@ -14,19 +14,23 @@
 #include <stdio.h>
 #include "screens.h"
 #include "styles.h"
-
 #include <time.h>             // For the live clock
-#include "../backend/system_config.h" // For the company name
-
 #include "lvgl.h"
-#include "extra/libs/qrcode/lv_qrcode.h"  // <-- ADD THIS LINE
+#include "extra/libs/qrcode/lv_qrcode.h"  
 
+#include "../backend/system_config.h" 
 #include "ui_widgets.h"
 
 static const char *UI_TAG = "UI_Manager";
 
+static ActiveScreenState current_screen_state = SCREEN_BOOTING;
+static lv_obj_t *loading_overlay = NULL;
+
 
 // Forward declarations
+void transition_to_display_select_screen(); 
+void transition_to_nozzle_select_screen(); 
+
 void transition_to_mode_select(void);
 void transition_to_numpad(DispenseMode mode);
 void transition_to_confirm(void);
@@ -42,35 +46,269 @@ static float final_volume = 0.0f;
 static lv_obj_t * active_qrcode = NULL;
 
 
-
 // 2. The Dynamic Generator
-static void generate_dynamic_panels(void) 
+void generate_dynamic_dispenser_panels(void) 
 {
     // EEZ Studio stores named widgets in the 'objects' struct.
     // Ensure you named your container 'main_container' in the EEZ editor.
-    if (objects.main_container == NULL) {
-        ESP_LOGE(UI_TAG, "Error: main_container not found!");
+    if (objects.dispenser_main_con == NULL) {
+        ESP_LOGE(UI_TAG, "Error: dispenser_main_con not found!");
         return;
     }
 
-    lv_obj_clean(objects.main_container);
+    lv_obj_clean(objects.dispenser_main_con);
 
-    int count = get_current_nozzle_count();
+    int count = get_current_dispenser_count();
     for(int i = 0; i < count; i++) {
-        NozzleData* data = get_nozzle(i);
+        DispenserNode* data = get_dispenser(i);
         if(data != NULL) {
-            create_nozzle_widget(objects.main_container, data);
+            create_dispenser_widget(objects.dispenser_main_con, data);
+        }
+    }
+}
+
+
+// 2. The Dynamic Generator
+static void generate_dynamic_display_panels(void) 
+{
+    // EEZ Studio stores named widgets in the 'objects' struct.
+    // Ensure you named your container 'main_container' in the EEZ editor.
+    if (objects.display_main_con == NULL) {
+        ESP_LOGE(UI_TAG, "Error: display_main_con not found!");
+        return;
+    }
+
+    lv_obj_clean(objects.display_main_con);
+
+    int count = get_current_display_count();
+    ESP_LOGW(UI_TAG, "Display found = %d", count);
+    
+    for(int i = 0; i < count; i++) {
+        DisplayNode* data = get_display(i);
+        if(data != NULL) {
+            create_display_widget(objects.display_main_con, data);
         }
     }
 }
 
 
 
+
+// 2. The Dynamic Generator
+static void generate_dynamic_nozzle_panels(void) 
+{
+    // EEZ Studio stores named widgets in the 'objects' struct.
+    // Ensure you named your container 'main_container' in the EEZ editor.
+    if (objects.nozzle_main_con == NULL) {
+        ESP_LOGE(UI_TAG, "Error: main_container not found!");
+        return;
+    }
+
+    lv_obj_clean(objects.nozzle_main_con);
+
+    int count = get_current_nozzle_count();
+    for(int i = 0; i < count; i++) {
+        NozzleNode* data = get_nozzle(i);
+        if(data != NULL) {
+            create_nozzle_widget(objects.nozzle_main_con, data);
+        }
+    }
+}
+
+
+extern lv_obj_t * loading_overlay; // Reference the global defined in widgets
+
+void refresh_dynamic_panels(void)
+{
+    // Always lock LVGL when called from an external background task (JSON Parser)
+    if (lvgl_port_lock(-1)) {
+        
+        // Act like a smart router based on the user's current view
+        switch (current_screen_state) {
+            
+            case SCREEN_DISPENSER_SELECT:
+                if (objects.dispenser_main_con != NULL) {
+                    ESP_LOGI(UI_TAG, "Live update: Redrawing Dispenser Select Screen");
+                    generate_dynamic_dispenser_panels();
+                    
+                    // // 1. If the overlay exists, delete it immediately upon data arrival
+                    // if (loading_overlay != NULL) {
+                    //     lv_obj_del(loading_overlay);
+                    //     loading_overlay = NULL;
+                    //     ESP_LOGI("UI", "Data received. Removing loading overlay.");
+                    // }
+                }
+                break;
+                
+            case SCREEN_DISPLAY_SELECT:
+                if (objects.display_main_con != NULL) {
+                    ESP_LOGI(UI_TAG, "Live update: Redrawing Display Select Screen");
+                    generate_dynamic_display_panels();
+                }
+                break;
+                
+            case SCREEN_NOZZLE_SELECT:
+                if (objects.nozzle_main_con != NULL) {
+                    ESP_LOGI(UI_TAG, "Live update: Redrawing Nozzle Select Screen");
+                    generate_dynamic_nozzle_panels();
+                }
+                break;
+                
+            case SCREEN_STATIC_FORM:
+            case SCREEN_BOOTING:
+
+            default:
+                // Do nothing. The user is on a static screen (like a payment QR code)
+                // We should not interrupt them or waste CPU redrawing hidden dynamic widgets.
+                break;
+        }
+        
+        lvgl_port_unlock();
+    }
+}
+
+
+
+bool is_ui_booting(void) {
+    return (current_screen_state == SCREEN_BOOTING);
+}
+
+
+// void set_ui_state_active(void)
+// {
+//     // Transition the state tracker from booting to the active main menu
+//     current_screen_state = SCREEN_DISPENSER_SELECT;
+// }
+
+
+
+void transition_to_dispenser_select_screen(void)
+{
+    if (lvgl_port_lock(-1)) {
+        // Change state so refresh_dynamic_panels knows to handle background updates
+        current_screen_state = SCREEN_DISPENSER_SELECT;
+        
+        
+        // Generate widgets using the freshly arrived JSON data
+        generate_dynamic_dispenser_panels();
+        
+        // Load the actual main screen
+        lv_scr_load(objects.main_dispenser_select_screen);
+        
+        lvgl_port_unlock();
+    }
+}
+
+
+
+void transition_to_display_select_screen(void)
+{
+    if (lvgl_port_lock(-1)) {
+        current_screen_state = SCREEN_DISPLAY_SELECT;
+        
+        generate_dynamic_display_panels();
+        
+        lv_scr_load(objects.display_select_screen); 
+        
+        lvgl_port_unlock();
+    }
+}
+
+
+
+// void transition_to_display_select_screen(void){
+
+//     // 1. Get the data the user just selected from the Backend
+//     // DispenserNode * active_data = get_active_nozzle();
+    
+//     // if (active_data == NULL || objects.mode_select_screen == NULL) {
+//     //     ESP_LOGE(UI_TAG, "Cannot load screen: Data or Screen object is missing.");
+//     //     return;
+//     // }
+//     lv_scr_load(objects.display_select_screen);
+
+// } 
+
+
+void transition_to_nozzle_select_screen(void)
+{
+    if (lvgl_port_lock(-1)) {
+        current_screen_state = SCREEN_NOZZLE_SELECT;
+        
+        generate_dynamic_nozzle_panels();
+        lv_scr_load(objects.nozzle_select_screen); 
+        
+
+        lvgl_port_unlock();
+    }
+}
+// void transition_to_nozzle_select_screen(void){
+
+//     lv_scr_load(objects.nozzle_select_screen); 
+// }
+
+
+
+
+void show_loading_overlay(const char *message)
+{
+    if (lvgl_port_lock(-1)) {
+        // Prevent creating duplicate overlays
+        if (loading_overlay != NULL) {
+            lvgl_port_unlock();
+            return;
+        }
+
+        // 1. Create a full-screen background container over the active screen
+        loading_overlay = lv_obj_create(lv_scr_act());
+        lv_obj_set_size(loading_overlay, LV_PCT(100), LV_PCT(100));
+        lv_obj_center(loading_overlay);
+        
+        // 2. Style the background (Solid color or semi-transparent)
+        lv_obj_set_style_bg_color(loading_overlay, lv_palette_main(LV_PALETTE_GREY), 0);
+        lv_obj_set_style_bg_opa(loading_overlay, LV_OPA_COVER, 0); // Use LV_OPA_70 for semi-transparent
+        lv_obj_set_style_border_width(loading_overlay, 0, 0);
+        lv_obj_set_style_radius(loading_overlay, 0, 0);
+
+        // 3. Add a loading text label
+        lv_obj_t *label = lv_label_create(loading_overlay);
+        lv_label_set_text(label, message ? message : "Loading Data...");
+        lv_obj_set_style_text_color(label, lv_color_white(), 0);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0); // Change to your project's font
+        lv_obj_align(label, LV_ALIGN_CENTER, 0, 20);
+
+        // 4. Optional: Add a spinning loader wheel if your LVGL build has it enabled
+        #if LV_USE_SPINNER
+        lv_obj_t *spinner = lv_spinner_create(loading_overlay, 1000, 60);
+        lv_obj_set_size(spinner, 50, 50);
+        lv_obj_align(spinner, LV_ALIGN_CENTER, 0, -30);
+        #endif
+
+        lvgl_port_unlock();
+    }
+}
+
+void hide_loading_overlay(void)
+{
+    if (lvgl_port_lock(-1)) {
+        if (loading_overlay != NULL) {
+            lv_obj_del(loading_overlay);
+            loading_overlay = NULL; // Reset pointer safely
+        }
+        lvgl_port_unlock();
+    }
+}
+
+
 // NEW FUNCTION: Prepares and loads the Mode Select Screen
 void transition_to_mode_select(void) 
 {
+    if (lvgl_port_lock(-1)) {
+        current_screen_state = SCREEN_STATIC_FORM; // Stop dynamic widget generation here
+
+    
     // 1. Get the data the user just selected from the Backend
-    NozzleData * active_data = get_active_transaction_nozzle();
+    NozzleNode* active_data = get_active_nozzle();
     
     if (active_data == NULL || objects.mode_select_screen == NULL) {
         ESP_LOGE(UI_TAG, "Cannot load screen: Data or Screen object is missing.");
@@ -79,7 +317,7 @@ void transition_to_mode_select(void)
 
     // 2. Inject the data into the EEZ Studio labels we just created
     if (objects.lbl_active_product) {
-        lv_label_set_text(objects.lbl_active_product, active_data->product_name);
+        lv_label_set_text(objects.lbl_active_product, active_data->fuel_type);
     }
 
     if (objects.active_product_panel) {
@@ -101,12 +339,15 @@ void transition_to_mode_select(void)
     
     if (objects.lbl_active_nozzle) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->id);
+        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->nozzle_id);
         lv_label_set_text(objects.lbl_active_nozzle, buf);
     }
 
     // 3. Perform the actual screen switch!
     lv_scr_load(objects.mode_select_screen);
+
+    lvgl_port_unlock();
+    }
 }
 
 
@@ -114,7 +355,7 @@ void transition_to_mode_select(void)
 void transition_to_numpad(DispenseMode mode) 
 {
     // 1. Get the ACTIVE data from the Backend!
-    NozzleData * active_data = get_active_transaction_nozzle();
+    NozzleNode * active_data = get_active_nozzle();
     
     if (active_data == NULL || objects.numpad_screen == NULL) {
         ESP_LOGE(UI_TAG, "Cannot load Numpad: Data or Screen is missing.");
@@ -123,7 +364,7 @@ void transition_to_numpad(DispenseMode mode)
 
     // 2. Inject all the backend data into the EEZ Labels
     if (objects.lbl_active_product_numpad) {
-        lv_label_set_text(objects.lbl_active_product_numpad, active_data->product_name);
+        lv_label_set_text(objects.lbl_active_product_numpad, active_data->fuel_type);
     }
 
     if (objects.active_product_panel_numpad) {
@@ -133,7 +374,7 @@ void transition_to_numpad(DispenseMode mode)
     
     if (objects.lbl_active_nozzle_numpad) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->id);
+        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->nozzle_id);
         lv_label_set_text(objects.lbl_active_nozzle_numpad, buf);
     }
     if (objects.lbl_active_rate) {
@@ -178,7 +419,7 @@ void transition_to_numpad(DispenseMode mode)
 void transition_to_confirm(void) 
 {
     // 1. Fetch all current state data from the Backend
-    NozzleData * active_data = get_active_transaction_nozzle();
+    NozzleNode * active_data = get_active_nozzle();
     DispenseMode mode = get_transaction_mode();
     float entered_value = get_transaction_value();
     
@@ -198,7 +439,7 @@ void transition_to_confirm(void)
 
         // 2. Inject all the backend data into the EEZ Labels
     if (objects.confirm_screen_lbl_active_product) {
-        lv_label_set_text(objects.confirm_screen_lbl_active_product, active_data->product_name);
+        lv_label_set_text(objects.confirm_screen_lbl_active_product, active_data->fuel_type);
     }
 
     if (objects.confirm_screen_active_product_panel) {
@@ -207,7 +448,7 @@ void transition_to_confirm(void)
     }
     if (objects.confirm_screen_lbl_active_nozzle) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->id);
+        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->nozzle_id);
         lv_label_set_text(objects.confirm_screen_lbl_active_nozzle, buf);
     }
     if (objects.confirm_screen_lbl_active_rate) {
@@ -253,7 +494,7 @@ void transition_to_qr_screen(void)
     if (objects.qr_screen == NULL || objects.qr_container == NULL) return;
 
     // 1. Get the Data
-    NozzleData * active_data = get_active_transaction_nozzle();
+    NozzleNode * active_data = get_active_nozzle();
     SystemConfig * sys_data = get_system_config();
     DispenseMode mode = get_transaction_mode();
     float entered_value = get_transaction_value();
@@ -312,23 +553,23 @@ void transition_to_qr_screen(void)
 
 void transition_to_nozzle_pikup(void){
 
-    if (objects.nozzle_pikup_screen == NULL){
+    if (objects.nozzle_pickup_screen == NULL){
         ESP_LOGE(UI_TAG, "Cannot load screen: nozzle pickup screen is missing.");
         return;
     } 
 
         // 1. Get the data the user just selected from the Backend
-    NozzleData * active_data = get_active_transaction_nozzle();
+    NozzleNode * active_data = get_active_nozzle();
     
     
     if (objects.nozzle_pikup_active_nozzle_label) {
         char buf[32];
-        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->id);
+        snprintf(buf, sizeof(buf), "NOZZLE %d", active_data->nozzle_id);
         lv_label_set_text(objects.nozzle_pikup_active_nozzle_label, buf);
     }
 
     // 3. Perform the actual screen switch!
-    lv_scr_load(objects.nozzle_pikup_screen);
+    lv_scr_load(objects.nozzle_pickup_screen);
     // 
 }
 
@@ -341,7 +582,7 @@ void transition_to_live_counting(void){
         return;
     } 
 
-    // NozzleData * active_data = get_active_transaction_nozzle();
+    // NozzleNode * active_data = get_active_nozzle();
     
     // Final Amount
     if (objects.live_counting_s_t_amount_lbl) {
@@ -363,22 +604,54 @@ void transition_to_live_counting(void){
 }
 
 
+
+void transition_to_login_screen(){
+
+        if (lvgl_port_lock(-1)) {
+            
+        lv_scr_load(objects.login_screen);
+            
+        lvgl_port_unlock();
+        
+    }
+    else{
+
+        ESP_LOGE(UI_TAG, "ERROR while loading login screen");
+        
+    }
+
+
+}
+
+
+
 // 3. The Thread-Safe Startup Task
 static void startup_ui_task(void *pvParameter) 
 {
     ESP_LOGI(UI_TAG, "Locking Engine and Building EEZ UI...");
     if (lvgl_port_lock(-1)) {
         
+        current_screen_state = SCREEN_BOOTING;
+        
         ui_init(); // Boot the EEZ Studio generated code
 
         init_system_header();
+
+        transition_to_dispenser_select_screen();
+        // // Load your direct main screen template safely
+        // lv_scr_load(objects.main_dispenser_select_screen);
+    
+        // // generate_dynamic_nozzle_panels(); // Inject our dynamic nozzle structs  
+        // generate_dynamic_dispenser_panels(); 
         
-        generate_dynamic_panels(); // Inject our dynamic nozzle structs        
         lvgl_port_unlock(); 
     }
     ESP_LOGI(UI_TAG, "EEZ UI Build Complete. Freeing startup memory.");
+
     vTaskDelete(NULL); 
 }
+
+
 void start_ui_manager(void) 
 {
     // Huge 8192 stack size prevents string formatting crashes
