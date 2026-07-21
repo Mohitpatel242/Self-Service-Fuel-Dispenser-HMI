@@ -10,7 +10,7 @@
 
 # Managed components downloaded by the IDF component manager.
 # Commit 'idf_component.yml' and 'dependencies.lock' instead.
-/components/
+/managed_components/
 
 # Python virtual environments
 .venv/
