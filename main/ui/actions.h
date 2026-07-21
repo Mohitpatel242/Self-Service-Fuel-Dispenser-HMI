@@ -19,6 +19,7 @@ extern void action_payment_method_confirm(lv_event_t * e);
 extern void action_payment_completed(lv_event_t * e);
 extern void action_goto_settings(lv_event_t * e);
 extern void action_config_login(lv_event_t * e);
+extern void action_login_confirm(lv_event_t * e);
 
 #ifdef __cplusplus
 }

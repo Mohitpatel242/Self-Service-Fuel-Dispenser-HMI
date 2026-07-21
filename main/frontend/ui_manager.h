@@ -9,7 +9,9 @@ typedef enum {
     SCREEN_DISPENSER_SELECT,
     SCREEN_DISPLAY_SELECT,
     SCREEN_NOZZLE_SELECT,
-    SCREEN_STATIC_FORM // Use this for Numpad, QR, etc., where dynamic widgets aren't drawn
+    SCREEN_STATIC_FORM, // Use this for Numpad, QR, etc., where dynamic widgets aren't drawn
+    SCREEN_LOGIN,
+    SCREEN_CONFIG
 } ActiveScreenState;
 
 
@@ -27,6 +29,8 @@ void transition_to_nozzle_select_screen();
 
 
 void transition_to_login_screen(); 
+void transition_to_config_screen(void);
+
 
 void transition_to_mode_select(void);
 void transition_to_numpad(DispenseMode mode);

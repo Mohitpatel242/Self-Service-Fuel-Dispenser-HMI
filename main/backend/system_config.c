@@ -1,5 +1,6 @@
 #include "system_config.h"
 #include <string.h>
+#include <stdbool.h>
 
 static SystemConfig current_system;
 
@@ -17,4 +18,21 @@ void load_system_config(void)
 SystemConfig* get_system_config(void) 
 {
     return &current_system;
+}
+
+
+// Store this securely. Eventually, you can load this from ESP32 NVS flash.
+static char current_admin_pin[16] = "123456"; 
+
+const char* get_admin_pin(void) 
+{
+    return current_admin_pin;
+}
+
+bool verify_admin_pin(const char* entered_pin) 
+{
+    if (entered_pin == NULL) return false;
+    
+    // Compare the strings. Returns true if they match exactly.
+    return (strcmp(entered_pin, current_admin_pin) == 0);
 }

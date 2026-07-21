@@ -14,10 +14,6 @@ static const char *TAG = "DATA_MODEL";
 static StationRegistry registry;
 static SemaphoreHandle_t model_mutex = NULL;
 
-// // --- Context Variables ---
-// static int active_du_idx = 0;   // The Dispenser this ESP32 is acting as
-// static int active_disp_idx = 0; // The specific Display on that Dispenser
-
 // --- Index Context Variables ---
 static int active_du_idx = 0;   
 static int active_disp_idx = 0; 
@@ -262,14 +258,14 @@ DispenserNode* get_dispenser(int index)
     return result;
 }    
 
-// // --- Active Context & UI Getters ---
-// void set_active_dispenser_context(int dispenser_index) 
-// {
-//     if (lock_station_model()) {
-//         active_du_idx = dispenser_index;
-//         unlock_station_model();
-//     }
-// }
+// --- Active Context & UI Getters ---
+void set_active_dispenser_context(int dispenser_index) 
+{
+    if (lock_station_model()) {
+        active_du_idx = dispenser_index;
+        unlock_station_model();
+    }
+}
 
 
 DispenserNode* get_active_dispenser(void) 
@@ -279,7 +275,6 @@ DispenserNode* get_active_dispenser(void)
         return NULL;
     }
 
-    ESP_LOGW(TAG, "active dispenser idex = %d", active_du_idx );
     // Instantly retrieve using the exact memory index
     return &registry.dispensers[active_du_idx];
 
@@ -302,7 +297,6 @@ int get_current_display_count(void)
 
         if (dis != NULL) {
             count = dis->display_count;
-            ESP_LOGW(TAG, "active dispenser idex = 1" );
         
         }else{
 

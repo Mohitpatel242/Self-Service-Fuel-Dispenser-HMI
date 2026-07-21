@@ -94,7 +94,7 @@ int get_current_dispenser_count(void);
 DispenserNode* get_dispenser(int index);
 
 // --- Active Context Management ---
-// void set_active_dispenser_context(int dispenser_index);
+void set_active_dispenser_context(int dispenser_index);
 DispenserNode* get_active_dispenser(void);
 
 

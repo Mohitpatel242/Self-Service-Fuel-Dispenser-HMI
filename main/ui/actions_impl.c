@@ -12,6 +12,10 @@
 #include <stdlib.h> // Required for atof()
 #include "../frontend/ui_manager.h" // Include this to access our new function
 
+
+ 
+#include "../backend/system_config.h" // For verification
+#include "../frontend/ui_manager.h"   // For transitions
 // Triggered by the BACK button in EEZ Studio
 
 
@@ -210,4 +214,38 @@ void action_goto_settings(lv_event_t * e){
 void action_config_login(lv_event_t * e){
     ESP_LOGI("ACTIONS", "Loading Setting Login");
     transition_to_login_screen();
+}
+
+// extern void action_login_confirm(lv_event_t * e){
+//     ESP_LOGI("ACTIONS", "Loading confirm page");
+
+// }
+
+
+
+
+void action_login_confirm(lv_event_t * e) 
+{
+    // 1. Extract the text from the LVGL Text Area
+    const char * entered_pin = lv_textarea_get_text(objects.pass_input_text_area);
+    
+    // 2. Ask the Backend to verify it
+    if (verify_admin_pin(entered_pin)) {
+        // SUCCESS: Move to the config page
+        ESP_LOGI("AUTH", "Admin login successful.");
+        transition_to_config_screen();
+    } else {
+        // FAILURE: Clear the box and reject
+        ESP_LOGW("AUTH", "Invalid PIN entered.");
+        
+        // Clear the text area so they can try again
+        lv_textarea_set_text(objects.pass_input_text_area, "");
+        
+        // --- Optional UX Enhancements here ---
+        // 1. You could un-hide a red "Incorrect PIN" label:
+        // lv_obj_clear_flag(objects.login_error_label, LV_OBJ_FLAG_HIDDEN);
+        
+        // 2. You could temporarily make the text area border red
+        // lv_obj_set_style_border_color(objects.login_textarea, lv_color_hex(0xFF0000), LV_PART_MAIN);
+    }
 }

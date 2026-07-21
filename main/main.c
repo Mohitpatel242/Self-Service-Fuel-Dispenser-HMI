@@ -25,6 +25,8 @@ void app_main(void)
     // Initialize the thread-safe data model
     station_model_init();
     
+    set_active_dispenser_context(1); // Set the initial active dispenser context
+
     
     // Boot the UI (it will load empty initially)
     start_ui_manager();

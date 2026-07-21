@@ -610,6 +610,11 @@ void transition_to_login_screen(){
         if (lvgl_port_lock(-1)) {
             
         lv_scr_load(objects.login_screen);
+                
+        current_screen_state = SCREEN_LOGIN;
+        
+        // Clear out any old text from previous login attempts
+        lv_textarea_set_text(objects.pass_input_text_area, ""); 
             
         lvgl_port_unlock();
         
@@ -625,6 +630,37 @@ void transition_to_login_screen(){
 
 
 
+// // 2. Add the transition logic
+// void transition_to_login_screen(void)
+// {
+//     if (lvgl_port_lock(-1)) {
+//         current_screen_state = SCREEN_LOGIN;
+        
+//         // Clear out any old text from previous login attempts
+//         lv_textarea_set_text(objects.pass_input_text_area, ""); 
+            
+//         // Optional: Hide error messages if you have an error label
+//         // lv_obj_add_flag(objects.login_error_label, LV_OBJ_FLAG_HIDDEN);
+        
+//         lv_scr_load(objects.login_screen);
+        
+//         lvgl_port_unlock();
+//     }
+// }
+
+void transition_to_config_screen(void)
+{
+    if (lvgl_port_lock(-1)) {
+        current_screen_state = SCREEN_CONFIG;
+        lv_scr_load(objects.config_screen);
+        lvgl_port_unlock();
+    }
+}
+
+
+
+
+
 // 3. The Thread-Safe Startup Task
 static void startup_ui_task(void *pvParameter) 
 {
@@ -637,13 +673,17 @@ static void startup_ui_task(void *pvParameter)
 
         init_system_header();
 
-        transition_to_dispenser_select_screen();
+        transition_to_display_select_screen();
+
+        // transition_to_dispenser_select_screen();
+
         // // Load your direct main screen template safely
         // lv_scr_load(objects.main_dispenser_select_screen);
     
         // // generate_dynamic_nozzle_panels(); // Inject our dynamic nozzle structs  
         // generate_dynamic_dispenser_panels(); 
         
+
         lvgl_port_unlock(); 
     }
     ESP_LOGI(UI_TAG, "EEZ UI Build Complete. Freeing startup memory.");

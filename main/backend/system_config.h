@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 typedef struct {
     char company_name[64];
     char dispenser_id[16];
@@ -9,3 +11,7 @@ typedef struct {
 
 void load_system_config(void);
 SystemConfig* get_system_config(void);
+
+// --- Security APIs ---
+const char* get_admin_pin(void);
+bool verify_admin_pin(const char* entered_pin);
