@@ -11,6 +11,10 @@
 
 static const char *TAG = "WIFI_HTTP";
 static const char *TARGET_URL = "http://192.168.4.1/GET_DU_STATUS";
+
+// static const char *TARGET_URL = "http://192.168.0.123/GET_DU_STATUS";
+
+
 // NEW: Global flag to track Wi-Fi state
 volatile bool is_wifi_connected = false;
 

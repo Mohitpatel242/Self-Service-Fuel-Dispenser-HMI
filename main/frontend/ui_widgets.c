@@ -655,8 +655,8 @@ void create_nozzle_widget(lv_obj_t * parent_obj, NozzleNode * data)
                 
                 lv_obj_t * rate_con = lv_obj_create(nozzle_con);
                 // objects.rate_con = obj;
-                lv_obj_set_pos(rate_con, 10, 130);
-                lv_obj_set_size(rate_con, LV_PCT(90), LV_PCT(10));
+                lv_obj_set_pos(rate_con, 10, 119);
+                lv_obj_set_size(rate_con, LV_PCT(90), LV_PCT(15));
                 lv_obj_set_style_pad_left(rate_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_pad_top(rate_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_pad_right(rate_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -665,9 +665,10 @@ void create_nozzle_widget(lv_obj_t * parent_obj, NozzleNode * data)
                 lv_obj_set_style_border_width(rate_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_radius(rate_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_layout(rate_con, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_flex_flow(rate_con, LV_FLEX_FLOW_ROW, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_flex_flow(rate_con, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_flex_track_place(rate_con, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_flex_main_place(rate_con, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_flex_cross_place(rate_con, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                 {
                     // lv_obj_t *parent_obj = obj;
                     {
@@ -702,8 +703,8 @@ void create_nozzle_widget(lv_obj_t * parent_obj, NozzleNode * data)
                 // density_con
                 // lv_obj_t *obj = lv_obj_create(parent_obj);
                 lv_obj_t * density_con = lv_obj_create(nozzle_con);
-                lv_obj_set_pos(density_con, 10, 159);
-                lv_obj_set_size(density_con, LV_PCT(90), LV_PCT(10));
+                lv_obj_set_pos(density_con, 10, 173);
+                lv_obj_set_size(density_con, LV_PCT(90), LV_PCT(15));
                 lv_obj_set_style_pad_left(density_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_pad_top(density_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_pad_right(density_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -712,9 +713,11 @@ void create_nozzle_widget(lv_obj_t * parent_obj, NozzleNode * data)
                 lv_obj_set_style_border_width(density_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_radius(density_con, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_layout(density_con, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_flex_flow(density_con, LV_FLEX_FLOW_ROW, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_flex_flow(density_con, LV_FLEX_FLOW_COLUMN, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_flex_track_place(density_con, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_flex_main_place(density_con, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_flex_cross_place(density_con, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                
                 {
                     // lv_obj_t *parent_obj = obj;
                     {

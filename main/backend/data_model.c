@@ -55,13 +55,6 @@ void unlock_station_model(void)
 }
 
 
-
-
-
-
-
-
-
 // --- Data Ingestion ---
 int register_or_get_dispenser(int dispenser_id, const char* serial_number, int display_count) 
 {
@@ -270,7 +263,8 @@ void set_active_dispenser_context(int dispenser_index)
 
 DispenserNode* get_active_dispenser(void) 
 {   
-    
+    return &registry.dispensers[0]; // this for only testing of of single dispenser, will be removed later
+
     if (active_du_idx < 0 || active_du_idx >= registry.dispenser_count) {
         return NULL;
     }
