@@ -26,9 +26,6 @@ static float active_dispense_value = 0.0f;
 static PaymentMethod active_payment = PAYMENT_NONE;
 
 
-
-
-
 // --- Thread Safety ---
 void station_model_init(void) 
 {
@@ -56,10 +53,10 @@ void unlock_station_model(void)
 
 
 // --- Data Ingestion ---
-int register_or_get_dispenser(int dispenser_id, const char* serial_number, int display_count) 
+int register_or_get_dispenser(int dispenser_index, const char* serial_number, int display_count) 
 {
     for (int i = 0; i < registry.dispenser_count; i++) {
-        if (registry.dispensers[i].dispenser_id == dispenser_id) {
+        if (registry.dispensers[i].dispenser_index == dispenser_index) {
             if (serial_number) {
                 strncpy(registry.dispensers[i].serial_number, serial_number, sizeof(registry.dispensers[i].serial_number) - 1);
             }
@@ -72,14 +69,14 @@ int register_or_get_dispenser(int dispenser_id, const char* serial_number, int d
 
     if (registry.dispenser_count < MAX_DISPENSERS) {
         int new_idx = registry.dispenser_count++;
-        registry.dispensers[new_idx].dispenser_id = dispenser_id;
+        registry.dispensers[new_idx].dispenser_index = dispenser_index;
         registry.dispensers[new_idx].display_count = (display_count > 0 && display_count <= MAX_DISPLAYS_PER_DU) ? display_count : 1;
         
         if (serial_number) {
             strncpy(registry.dispensers[new_idx].serial_number, serial_number, sizeof(registry.dispensers[new_idx].serial_number) - 1);
             registry.dispensers[new_idx].serial_number[sizeof(registry.dispensers[new_idx].serial_number) - 1] = '\0';
         }
-        ESP_LOGI(TAG, "Registered new Dispenser ID %d at Index [%d]", dispenser_id, new_idx);
+        ESP_LOGI(TAG, "Registered new Dispenser ID %d at Index [%d]", dispenser_index, new_idx);
         return new_idx;
     }
     return -1;
@@ -87,7 +84,7 @@ int register_or_get_dispenser(int dispenser_id, const char* serial_number, int d
 
 
 
-bool update_display_node(int du_idx, int display_id, const char* status) 
+bool update_display_node(int du_idx, int display_id, const char* status, const char* running_transaction_amt, const char* running_transaction_qty, const char* trans_running_status ) 
 {
     if (du_idx < 0 || du_idx >= registry.dispenser_count) return false;
     int d_idx = display_id - 1;
@@ -99,6 +96,18 @@ bool update_display_node(int du_idx, int display_id, const char* status)
     if (status) {
         strncpy(disp->status, status, sizeof(disp->status) - 1);
         disp->status[sizeof(disp->status) - 1] = '\0';
+    }
+    if (running_transaction_amt) {
+        strncpy(disp->running_transaction_amt, running_transaction_amt, sizeof(disp->running_transaction_amt) - 1);
+        disp->running_transaction_amt[sizeof(disp->running_transaction_amt) - 1] = '\0';
+    }
+    if (running_transaction_qty) {
+        strncpy(disp->running_transaction_qty, running_transaction_qty, sizeof(disp->running_transaction_qty) - 1);
+        disp->running_transaction_qty[sizeof(disp->running_transaction_qty) - 1] = '\0';
+    }
+    if (trans_running_status) {
+        strncpy(disp->trans_running_status, trans_running_status, sizeof(disp->trans_running_status) - 1);
+        disp->trans_running_status[sizeof(disp->trans_running_status) - 1] = '\0';
     }
     return true;
 }
@@ -144,11 +153,6 @@ bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, const char* f
     }
     return true;
 }
-
-
-
-
-
 
 
 
@@ -423,6 +427,17 @@ NozzleNode* get_active_nozzle(void)
 //=====================================================================================================================================================
 
 
+bool is_nozzle_picked_up(void){
+    DisplayNode *disp = get_active_display();
+    char *trans_running_status = disp->trans_running_status;
+    if (strcmp(trans_running_status, "ENABLE") == 0) {
+        return true;
+        ESP_LOGI(TAG, "Nozzle has been picked up. Transitioning to Mode Select Screen.");
+    }
+
+    return false;
+}
+
 
 void set_transaction_mode(DispenseMode mode) { active_dispense_mode = mode; }
 DispenseMode get_transaction_mode(void) { return active_dispense_mode; }
@@ -442,7 +457,7 @@ void print_station_model_registry(void)
     for (int i = 0; i < registry.dispenser_count; i++) {
         DispenserNode *du = &registry.dispensers[i];
         ESP_LOGI(TAG, "Dispenser Index [%d] -> ID: %d | Serial: %s | Active Screens: %d", 
-                 i, du->dispenser_id, du->serial_number, du->display_count);
+                 i, du->dispenser_index, du->serial_number, du->display_count);
         
         for (int d = 0; d < du->display_count; d++) {
             DisplayNode *disp = &du->displays[d];

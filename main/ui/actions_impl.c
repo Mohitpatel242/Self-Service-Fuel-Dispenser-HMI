@@ -11,9 +11,9 @@
 #include "../backend/data_model.h"
 #include <stdlib.h> // Required for atof()
 #include "../frontend/ui_manager.h" // Include this to access our new function
+#include "../comms/wifi_http_client.h" // For reloading data
 
-
- 
+#include "json_parser.h"
 #include "../backend/system_config.h" // For verification
 #include "../frontend/ui_manager.h"   // For transitions
 // Triggered by the BACK button in EEZ Studio
@@ -198,10 +198,14 @@ void action_payment_method_confirm(lv_event_t * e)
 
 void action_payment_completed(lv_event_t * e) 
 {
-    ESP_LOGI("ACTIONS", "PICK-UP NOZZLE");
+    ESP_LOGI("ACTIONS", "Payment marked as completed. Triggering network payload.");
     
-    // In the next step, we will load the Payment Method Screen here!
-    transition_to_nozzle_pikup();
+    // 1. Fire the asynchronous network task to push the data
+    send_pump_control();
+    
+    // 2. Instantly transition to the next step of the flow
+    // (e.g., instructing the user to pick up the nozzle)
+    transition_to_nozzle_pikup(); 
 }
 
 
@@ -248,4 +252,12 @@ void action_login_confirm(lv_event_t * e)
         // 2. You could temporarily make the text area border red
         // lv_obj_set_style_border_color(objects.login_textarea, lv_color_hex(0xFF0000), LV_PART_MAIN);
     }
+}
+
+void action_reload_data(lv_event_t * e){
+    
+    ESP_LOGI("ACTIONS", "Reloading data from backend");
+    start_live_data_monitor();
+
+    // reload_data_from_backend();
 }

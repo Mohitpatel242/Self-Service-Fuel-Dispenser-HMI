@@ -9,15 +9,16 @@
 #include "freertos/task.h"
 #include <string.h>
 
+#include "../backend/system_config.h" 
+
 static const char *TAG = "WIFI_HTTP";
-static const char *TARGET_URL = "http://192.168.4.1/GET_DU_STATUS";
 
-// static const char *TARGET_URL = "http://192.168.0.123/GET_DU_STATUS";
-
+// Declare them globally as NULL
+SystemConfig *sys_data = NULL;
+char *TARGET_URL = NULL;
 
 // NEW: Global flag to track Wi-Fi state
 volatile bool is_wifi_connected = false;
-
 
 // --- 1. Wi-Fi Event Handler ---
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) 
@@ -34,7 +35,6 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         is_wifi_connected = true; // NEW: Allow HTTP requests!
     }
 }
-
 
 // --- 2. HTTP Event Handler (Collects the JSON chunks) ---
 esp_err_t http_event_handler(esp_http_client_event_t *evt) 
@@ -92,17 +92,23 @@ static void http_get_task(void *pvParameters)
 {
     ESP_LOGI(TAG, "Starting HTTP GET Monitor Task...");
 
+    sys_data = get_system_config();
+    if (sys_data != NULL) {
+        TARGET_URL = sys_data->target_url;
+    }
+
     esp_http_client_config_t config = {
         .url = TARGET_URL,
         .event_handler = http_event_handler,
         .timeout_ms = 1500, 
     };
 
-    while (1) {
+    // while (1) {
+        
         // NEW: Do not attempt to connect if Wi-Fi is down!
         if (!is_wifi_connected) {
             vTaskDelay(pdMS_TO_TICKS(1000));
-            continue;
+            // continue;
         }
 
         esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -114,7 +120,7 @@ static void http_get_task(void *pvParameters)
 
         esp_http_client_cleanup(client);
         vTaskDelay(pdMS_TO_TICKS(1000));
-    }
+    // }
 }
 
 // --- 4. Public Initialization APIs ---
@@ -154,5 +160,6 @@ void wifi_network_init(const char* ssid, const char* password)
 void start_live_data_monitor(void) 
 {
     // Spin up the background task with a generous stack size for HTTP processing
-    xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
+    // xTaskCreate(http_get_task, "http_get_task", 8192, NULL, 5, NULL);
+    http_get_task(NULL); // Call directly for testing; remove in production
 }

@@ -79,6 +79,8 @@ typedef struct _objects_t {
     lv_obj_t *time_label;
     lv_obj_t *settings_btn;
     lv_obj_t *config_icon;
+    lv_obj_t *reload_btn;
+    lv_obj_t *reload_btn_lbl;
     lv_obj_t *nozzle_main_con;
     lv_obj_t *nozzle_con;
     lv_obj_t *product_panel;
@@ -258,7 +260,6 @@ typedef struct _objects_t {
     lv_obj_t *system_time_con_7;
     lv_obj_t *date_label_7;
     lv_obj_t *time_label_7;
-    lv_obj_t *obj10;
 } objects_t;
 
 extern objects_t objects;

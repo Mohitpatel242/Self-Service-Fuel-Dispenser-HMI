@@ -22,8 +22,8 @@ void app_main(void)
     static StationRegistry registry;
     registry.dispenser_count = 1; // Initialize with one dispenser for testing
 
-    comms_init("FCC-260627-21000801", "CZAR@WDL");
-    // comms_init("CZAR_IOT_DEPT", "12345678");
+    comms_init(get_system_config()->ssid, get_system_config()->pass);
+
     comms_start_polling();
     
     // Initialize the thread-safe data model

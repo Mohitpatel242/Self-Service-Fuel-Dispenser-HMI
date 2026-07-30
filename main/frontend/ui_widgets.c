@@ -45,10 +45,10 @@ unsigned int get_shine(unsigned int color, float factor) {
 //     DispenserNode * selected_data = (DispenserNode *)lv_event_get_user_data(e);
     
 //     // Save state to backend
-//     set_active_dispenser_context(selected_data->dispenser_id);
+//     set_active_dispenser_context(selected_data->dispenser_index);
     
     
-//     ESP_LOGW(TAG, "selected dispenser id = %d", selected_data->dispenser_id );
+//     ESP_LOGW(TAG, "selected dispenser id = %d", selected_data->dispenser_index );
 
 //     // Prepare and load the new screen
 //     transition_to_display_select_screen(); 
@@ -274,7 +274,7 @@ void create_dispenser_widget(lv_obj_t * parent_obj, DispenserNode* data)
                         // lv_label_set_text_static(info_con_1_lable_2, "103.45");
 
                         char id_buf[16];
-                        snprintf(id_buf, sizeof(id_buf), "%d", data->dispenser_id);
+                        snprintf(id_buf, sizeof(id_buf), "%d", data->dispenser_index);
                         lv_label_set_text(dispenser_info_con_1_lable_2, id_buf);
                     }
                 }
@@ -419,7 +419,7 @@ void create_display_widget(lv_obj_t * parent_obj, DisplayNode* data)
                         lv_obj_add_flag(display_heading_label, LV_OBJ_FLAG_CLICKABLE);
                         lv_obj_set_style_text_color(display_heading_label, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
                         lv_obj_set_style_text_font(display_heading_label, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_label_set_text_static(display_heading_label, "DISPLAY");
+                        lv_label_set_text_static(display_heading_label, "PUMP");
                     }
                 }
             }
@@ -451,7 +451,7 @@ void create_display_widget(lv_obj_t * parent_obj, DisplayNode* data)
                         lv_obj_add_flag(display_info_con_1_lable_1, LV_OBJ_FLAG_CLICKABLE);
                         lv_obj_set_style_text_color(display_info_con_1_lable_1, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                         lv_obj_set_style_text_font(display_info_con_1_lable_1, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_label_set_text_static(display_info_con_1_lable_1, "DISPLAY ID");
+                        lv_label_set_text_static(display_info_con_1_lable_1, "PUMP ID");
                     }
                     {
                         // display_info_con_1_lable_2
@@ -791,12 +791,17 @@ void create_nozzle_widget(lv_obj_t * parent_obj, NozzleNode * data)
 
 void init_system_header(void) 
 {
- 
+    
     // header_panel
-
+    
+    
     SystemConfig * sys_data = get_system_config();
-    // lv_obj_t * current_screen = lv_scr_act();/
+    // lv_obj_t * current_screen = lv_scr_act();
 
+    DispenserNode * active_dispenser = get_active_dispenser();
+    
+    ESP_LOGW("TAG", " VALUE: %d", active_dispenser->dispenser_index);
+    ESP_LOGW("TAG", " VALUE: %s", active_dispenser->serial_number);
 
     sys_header_panel = lv_obj_create(lv_layer_top());
 
@@ -844,8 +849,8 @@ void init_system_header(void)
                     lv_obj_set_style_text_font(dispenser_num, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(dispenser_num, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_layout(dispenser_num, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    // lv_label_set_text_static(dispenser_num, "DU-01");
-                    lv_label_set_text(dispenser_num, sys_data->dispenser_id);
+                    lv_label_set_text_static(dispenser_num, "ID: 999999");
+                    // lv_label_set_text(dispenser_num, active_dispenser->dispenser_index);
 
                 }
                 {
@@ -857,8 +862,8 @@ void init_system_header(void)
                     lv_obj_set_style_text_font(dispenser_serial_num, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(dispenser_serial_num, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_layout(dispenser_serial_num, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    // lv_label_set_text_static(dispenser_serial_num, "SN  : 998822A");
-                    lv_label_set_text(dispenser_serial_num, sys_data->serial_number);
+                    lv_label_set_text_static(dispenser_serial_num, "SN: 99000000");
+                    // lv_label_set_text(dispenser_serial_num, active_dispenser->serial_number);
                 }
             }
         }
@@ -950,6 +955,32 @@ void init_system_header(void)
                     }
                 }
             }
+            {
+                    // reload_btn
+                    lv_obj_t *reload_btn = lv_btn_create(sys_header_panel);
+                    // objects.reload_btn = reload_btn;
+                    lv_obj_set_pos(reload_btn, 133, -15);
+                    lv_obj_set_size(reload_btn, 52, 38);
+                    lv_obj_add_event_cb(reload_btn, action_reload_data, LV_EVENT_CLICKED, (void *)0);
+                    lv_obj_set_style_radius(reload_btn, 130, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_bg_color(reload_btn, lv_color_hex(theme_colors[active_theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_border_color(reload_btn, lv_color_hex(theme_colors[active_theme_index][6]), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_border_width(reload_btn, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_shadow_width(reload_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    {
+                        // lv_obj_t *parent_obj = obj;
+                        {
+                            // reload_btn_lbl
+                            lv_obj_t *reload_btn_lbl = lv_label_create(reload_btn);
+                            // objects.reload_btn_lbl = obj;
+                            lv_obj_set_pos(reload_btn_lbl, 0, 0);
+                            lv_obj_set_size(reload_btn_lbl, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                            lv_obj_set_style_align(reload_btn_lbl, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_obj_set_style_text_font(reload_btn_lbl, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_label_set_text_static(reload_btn_lbl, "R");
+                        }
+                    }
+                }
 
         // }
         /*else{

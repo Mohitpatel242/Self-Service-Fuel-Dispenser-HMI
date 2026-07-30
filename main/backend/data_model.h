@@ -25,11 +25,15 @@ typedef struct {
     int display_id;
     char status[32];
     int nozzle_count;
+    char running_transaction_amt[32];
+    char running_transaction_qty[32];
+    char trans_running_status[32]; // New field to store the transaction running status
+
     NozzleNode nozzles[MAX_NOZZLES_PER_DISP];
 } DisplayNode;
 
 typedef struct {
-    int dispenser_id;
+    int dispenser_index;
     char serial_number[32];
     int display_count;
     DisplayNode displays[MAX_DISPLAYS_PER_DU];
@@ -60,8 +64,8 @@ bool lock_station_model(void);
 void unlock_station_model(void);
 
 // --- Deep Insertion Data Update API (Used by JSON Parser) ---
-int register_or_get_dispenser(int dispenser_id, const char* serial_number, int display_count);
-bool update_display_node(int du_idx, int display_id, const char* status);
+int register_or_get_dispenser(int dispenser_index, const char* serial_number, int display_count);
+bool update_display_node(int du_idx, int display_id, const char* status, const char* running_transaction_amt, const char* running_transaction_qty, const char* trans_running_status);
 bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, const char* fuel_type, float rate, float density);
 
 // --- System Debug API ---
@@ -129,3 +133,7 @@ float get_transaction_value(void);
 
 void set_payment_method(PaymentMethod method);
 PaymentMethod get_payment_method(void);
+
+
+
+bool is_nozzle_picked_up(void);

@@ -17,7 +17,7 @@
 #include <time.h>             // For the live clock
 #include "lvgl.h"
 #include "extra/libs/qrcode/lv_qrcode.h"  
-
+#include "wifi_http_client.h"
 #include "../backend/system_config.h" 
 #include "ui_widgets.h"
 
@@ -92,8 +92,6 @@ static void generate_dynamic_display_panels(void)
 }
 
 
-
-
 // 2. The Dynamic Generator
 static void generate_dynamic_nozzle_panels(void) 
 {
@@ -156,6 +154,20 @@ void refresh_dynamic_panels(void)
                 
             case SCREEN_STATIC_FORM:
             case SCREEN_BOOTING:
+
+            case SCREEN_LIVE_COUNTING:
+                // if (objects.live_counting_screen != NULL) {
+                //     ESP_LOGI(UI_TAG, "Live update: Redrawing Live Counting Screen");
+
+                //     xTaskCreate(
+                //         refresh_live_counting_screen,    // Task function
+                //         "live_counting_monitor",       // Name of task
+                //         4096,                   // Stack size in bytes
+                //         NULL,                   // Task input parameter
+                //         5,                      // Priority (Adjust based on your project)
+                //         NULL                    // Task handle
+                //     );
+                // }
 
             default:
                 // Do nothing. The user is on a static screen (like a payment QR code)
@@ -570,7 +582,40 @@ void transition_to_nozzle_pikup(void){
 
     // 3. Perform the actual screen switch!
     lv_scr_load(objects.nozzle_pickup_screen);
-    // 
+
+    xTaskCreate(
+        nozzle_monitor_task,    // Task function
+        "nozzle_monitor",       // Name of task
+        4096,                   // Stack size in bytes
+        NULL,                   // Task input parameter
+        5,                      // Priority (Adjust based on your project)
+        NULL                    // Task handle
+    );
+}
+
+
+
+
+// 1. Define the background task function
+void nozzle_monitor_task(void *pvParameters) {
+    while (1) {
+
+        start_live_data_monitor(); // Start monitoring live data in the background
+
+        if (is_nozzle_picked_up()) {
+            ESP_LOGW("UI_TAG", "Nozzle picked up. Transitioning screen.");
+            
+            // It is safest to update UI elements on the main GUI thread
+            transition_to_live_counting(); 
+            
+            // Self-delete the task to free up memory
+            vTaskDelete(NULL); 
+        }
+        // Yields control back to the CPU so other tasks can run
+        ESP_LOGW("UI_TAG", "Monitoring Nozzle pickup status.");
+
+        vTaskDelay(pdMS_TO_TICKS(500)); 
+    }
 }
 
 
@@ -582,6 +627,7 @@ void transition_to_live_counting(void){
         return;
     } 
 
+    
     // NozzleNode * active_data = get_active_nozzle();
     
     // Final Amount
@@ -597,11 +643,58 @@ void transition_to_live_counting(void){
         snprintf(buf_vol, sizeof(buf_vol), "%.3f Liters", final_volume);
         lv_label_set_text(objects.live_counting_s_t_volume_lbl, buf_vol);
     }
+    
+    xTaskCreate(
+        refresh_live_counting_screen,    // Task function
+        "live_counting_monitor",       // Name of task
+        4096,                   // Stack size in bytes
+        NULL,                   // Task input parameter
+        5,                      // Priority (Adjust based on your project)
+        NULL                    // Task handle
+    );
 
     // 3. Perform the actual screen switch!
     lv_scr_load(objects.live_counting_screen);
     // 
+    current_screen_state = SCREEN_LIVE_COUNTING;
 }
+
+
+
+// 1. Define the background task function
+void refresh_live_counting_screen(void *pvParameters) {
+    while (1) {
+        if (is_nozzle_picked_up()) {
+            ESP_LOGW("UI_TAG", "Running Live Counting Screen Refresh Task.");
+            
+            start_live_data_monitor(); // Start monitoring live data in the background            
+            // Self-delete the task to free up memory
+
+            DisplayNode * active_display = get_active_display();
+            // Final Amount
+            if (objects.live_counting_screen_amount_label) {
+                char buf_amt[32];
+                snprintf(buf_amt, sizeof(buf_amt), "%s", active_display->running_transaction_amt);
+                lv_label_set_text(objects.live_counting_screen_amount_label, buf_amt);
+            }
+            // Final Volume
+            if (objects.live_counting_screen_volume_label) {
+                char buf_vol[32];
+                snprintf(buf_vol, sizeof(buf_vol), "%s", active_display->running_transaction_qty);
+                lv_label_set_text(objects.live_counting_screen_volume_label, buf_vol);
+            }
+
+        }
+        else {
+            
+            ESP_LOGW("UI_TAG", "Nozzle is down. Stopping Live Counting Screen Refresh Task.");
+            vTaskDelete(NULL); 
+        }
+        // Yields control back to the CPU so other tasks can run
+        vTaskDelay(pdMS_TO_TICKS(100)); 
+    }
+}
+
 
 
 
@@ -683,6 +776,7 @@ static void startup_ui_task(void *pvParameter)
         // // generate_dynamic_nozzle_panels(); // Inject our dynamic nozzle structs  
         // generate_dynamic_dispenser_panels(); 
         
+
 
         lvgl_port_unlock(); 
     }

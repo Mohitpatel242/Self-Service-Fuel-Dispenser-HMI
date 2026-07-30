@@ -11,7 +11,8 @@ typedef enum {
     SCREEN_NOZZLE_SELECT,
     SCREEN_STATIC_FORM, // Use this for Numpad, QR, etc., where dynamic widgets aren't drawn
     SCREEN_LOGIN,
-    SCREEN_CONFIG
+    SCREEN_CONFIG, 
+    SCREEN_LIVE_COUNTING
 } ActiveScreenState;
 
 
@@ -47,7 +48,9 @@ void hide_loading_overlay(void);
 bool is_ui_booting(void);
 
 
+void nozzle_monitor_task(void *pvParameters);
 
+void refresh_live_counting_screen(void *pvParameters);
 // void set_ui_state_active(void);
 // void generate_dynamic_dispenser_panels(void);
 // void refresh_dynamic_panels(void);
