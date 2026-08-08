@@ -59,9 +59,9 @@ typedef enum {
 } PaymentMethod;
 
 // --- System Thread Safety Controls ---
-void station_model_init(void);
 bool lock_station_model(void);
 void unlock_station_model(void);
+void station_model_init(void);
 
 // --- Deep Insertion Data Update API (Used by JSON Parser) ---
 int register_or_get_dispenser(int dispenser_index, const char* serial_number, int display_count);

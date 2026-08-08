@@ -16,7 +16,7 @@
 #include "json_parser.h"
 #include "../backend/system_config.h" // For verification
 #include "../frontend/ui_manager.h"   // For transitions
-// Triggered by the BACK button in EEZ Studio
+#include "../comms/post_pump_control.h" // For sending pump control commands
 
 
 void action_go_back(lv_event_t * e) 

@@ -26,18 +26,6 @@ static float active_dispense_value = 0.0f;
 static PaymentMethod active_payment = PAYMENT_NONE;
 
 
-// --- Thread Safety ---
-void station_model_init(void) 
-{
-    if (model_mutex == NULL) {
-        model_mutex = xSemaphoreCreateMutex();
-    }
-    lock_station_model();
-    memset(&registry, 0, sizeof(StationRegistry));
-    unlock_station_model();
-    ESP_LOGI(TAG, "Thread-safe Station Model Matrix Storage Initialized.");
-}
-
 bool lock_station_model(void) 
 {
     if (model_mutex == NULL) return false;
@@ -49,6 +37,18 @@ void unlock_station_model(void)
     if (model_mutex != NULL) {
         xSemaphoreGive(model_mutex);
     }
+}
+
+// --- Thread Safety ---
+void station_model_init(void) 
+{
+    if (model_mutex == NULL) {
+        model_mutex = xSemaphoreCreateMutex();
+    }
+    lock_station_model();
+    memset(&registry, 0, sizeof(StationRegistry));
+    unlock_station_model();
+    ESP_LOGI(TAG, "Thread-safe Station Model Matrix Storage Initialized.");
 }
 
 
@@ -276,10 +276,6 @@ DispenserNode* get_active_dispenser(void)
     // Instantly retrieve using the exact memory index
     return &registry.dispensers[active_du_idx];
 
-    // if (active_du_idx < 0 || active_du_idx >= registry.dispenser_count) return NULL;
-
-    // // if (active_disp_idx < 0 || active_disp_idx >= registry.dispensers[active_du_idx].display_count) return NULL;
-    // return &registry.dispensers[active_du_idx];
 }
 
 
@@ -319,14 +315,6 @@ DisplayNode* get_display(int index)
 }    
 
 
-// --- Active Context & UI Getters ---
-// void set_active_display_context(int display_index) 
-// {
-//     if (lock_station_model()) {
-//         active_disp_idx = display_index;
-//         unlock_station_model();
-//     }
-// }
 
 DisplayNode* get_active_display(void) 
 {
@@ -337,11 +325,6 @@ DisplayNode* get_active_display(void)
     }
     // Instantly retrieve using the exact memory index
     return &du->displays[active_disp_idx];
-
-    // if (active_du_idx < 0 || active_du_idx >= registry.dispenser_count) return NULL;
-    // if (active_disp_idx < 0 || active_disp_idx >= registry.dispensers[active_du_idx].display_count) return NULL;
-    
-    // return &registry.dispensers[active_du_idx].displays[active_disp_idx];
 }
 
 
@@ -376,8 +359,6 @@ NozzleNode* get_nozzle(int index)
     return result;
 }    
 
-// --- Transaction Data ---
-// void set_active_transaction_nozzle(int nozzle_id) { active_noz_idx = nozzle_id; }
 
 NozzleNode* get_active_nozzle(void) 
 {
@@ -391,35 +372,6 @@ NozzleNode* get_active_nozzle(void)
     // CRITICAL FIX: Do not loop. Do not check nozzle_id.
     // Just return the memory slot directly.
     return &disp->nozzles[active_noz_idx];
-
-
-/*
-    NozzleNode* result = NULL;
-    if (lock_station_model()) {
-        DisplayNode *disp = get_active_display();
-        if (disp != NULL) {
-            for(int i = 0; i < disp->nozzle_count; i++) {
-                if(disp->nozzles[i-1].nozzle_id == active_noz_idx) {
-                    result = &disp->nozzles[i];
-                    break;
-                }else{
-                    ESP_LOGW(TAG, " if not pass");
-                }
-                ESP_LOGW(TAG, "active noz idx  = %d", active_noz_idx);
-
-            }
-        }
-        else{
-            ESP_LOGW(TAG, "disp is NULL");
-            
-        }
-        unlock_station_model();
-        if (result == NULL){
-
-            ESP_LOGW(TAG, "result is NULL ================");
-        }
-    }
-    return result; */
 }
 
 
@@ -450,6 +402,10 @@ PaymentMethod get_payment_method(void) { return active_payment; }
 
 // --- Debug ---
 int station_model_get_total_dispensers(void) { return registry.dispenser_count; }
+
+
+
+
 
 void print_station_model_registry(void) 
 {

@@ -96,7 +96,6 @@ static void generate_dynamic_display_panels(void)
 static void generate_dynamic_nozzle_panels(void) 
 {
     // EEZ Studio stores named widgets in the 'objects' struct.
-    // Ensure you named your container 'main_container' in the EEZ editor.
     if (objects.nozzle_main_con == NULL) {
         ESP_LOGE(UI_TAG, "Error: main_container not found!");
         return;
@@ -156,18 +155,9 @@ void refresh_dynamic_panels(void)
             case SCREEN_BOOTING:
 
             case SCREEN_LIVE_COUNTING:
-                // if (objects.live_counting_screen != NULL) {
-                //     ESP_LOGI(UI_TAG, "Live update: Redrawing Live Counting Screen");
-
-                //     xTaskCreate(
-                //         refresh_live_counting_screen,    // Task function
-                //         "live_counting_monitor",       // Name of task
-                //         4096,                   // Stack size in bytes
-                //         NULL,                   // Task input parameter
-                //         5,                      // Priority (Adjust based on your project)
-                //         NULL                    // Task handle
-                //     );
-                // }
+                if (objects.live_counting_screen != NULL) {
+                    ESP_LOGI(UI_TAG, "Live update: Redrawing Live Counting Screen");
+                }
 
             default:
                 // Do nothing. The user is on a static screen (like a payment QR code)
@@ -184,14 +174,6 @@ void refresh_dynamic_panels(void)
 bool is_ui_booting(void) {
     return (current_screen_state == SCREEN_BOOTING);
 }
-
-
-// void set_ui_state_active(void)
-// {
-//     // Transition the state tracker from booting to the active main menu
-//     current_screen_state = SCREEN_DISPENSER_SELECT;
-// }
-
 
 
 void transition_to_dispenser_select_screen(void)
@@ -228,19 +210,6 @@ void transition_to_display_select_screen(void)
 
 
 
-// void transition_to_display_select_screen(void){
-
-//     // 1. Get the data the user just selected from the Backend
-//     // DispenserNode * active_data = get_active_nozzle();
-    
-//     // if (active_data == NULL || objects.mode_select_screen == NULL) {
-//     //     ESP_LOGE(UI_TAG, "Cannot load screen: Data or Screen object is missing.");
-//     //     return;
-//     // }
-//     lv_scr_load(objects.display_select_screen);
-
-// } 
-
 
 void transition_to_nozzle_select_screen(void)
 {
@@ -254,12 +223,6 @@ void transition_to_nozzle_select_screen(void)
         lvgl_port_unlock();
     }
 }
-// void transition_to_nozzle_select_screen(void){
-
-//     lv_scr_load(objects.nozzle_select_screen); 
-// }
-
-
 
 
 void show_loading_overlay(const char *message)
@@ -723,24 +686,6 @@ void transition_to_login_screen(){
 
 
 
-// // 2. Add the transition logic
-// void transition_to_login_screen(void)
-// {
-//     if (lvgl_port_lock(-1)) {
-//         current_screen_state = SCREEN_LOGIN;
-        
-//         // Clear out any old text from previous login attempts
-//         lv_textarea_set_text(objects.pass_input_text_area, ""); 
-            
-//         // Optional: Hide error messages if you have an error label
-//         // lv_obj_add_flag(objects.login_error_label, LV_OBJ_FLAG_HIDDEN);
-        
-//         lv_scr_load(objects.login_screen);
-        
-//         lvgl_port_unlock();
-//     }
-// }
-
 void transition_to_config_screen(void)
 {
     if (lvgl_port_lock(-1)) {
@@ -749,8 +694,6 @@ void transition_to_config_screen(void)
         lvgl_port_unlock();
     }
 }
-
-
 
 
 
