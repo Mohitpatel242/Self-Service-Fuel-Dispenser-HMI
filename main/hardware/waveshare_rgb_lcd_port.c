@@ -182,6 +182,7 @@ esp_err_t waveshare_esp32_s3_rgb_lcd_init()
 }
 
 /******************************* Turn on the screen backlight **************************************/
+
 esp_err_t wavesahre_rgb_lcd_bl_on()
 {
     //Configure CH422G to output mode 

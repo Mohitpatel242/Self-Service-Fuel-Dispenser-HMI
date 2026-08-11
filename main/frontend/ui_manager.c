@@ -81,8 +81,7 @@ static void generate_dynamic_display_panels(void)
     lv_obj_clean(objects.display_main_con);
 
     int count = get_current_display_count();
-    ESP_LOGW(UI_TAG, "Display found = %d", count);
-    
+
     for(int i = 0; i < count; i++) {
         DisplayNode* data = get_display(i);
         if(data != NULL) {
@@ -263,16 +262,6 @@ void show_loading_overlay(const char *message)
     }
 }
 
-void hide_loading_overlay(void)
-{
-    if (lvgl_port_lock(-1)) {
-        if (loading_overlay != NULL) {
-            lv_obj_del(loading_overlay);
-            loading_overlay = NULL; // Reset pointer safely
-        }
-        lvgl_port_unlock();
-    }
-}
 
 
 // NEW FUNCTION: Prepares and loads the Mode Select Screen
@@ -397,6 +386,14 @@ void transition_to_confirm(void)
     NozzleNode * active_data = get_active_nozzle();
     DispenseMode mode = get_transaction_mode();
     float entered_value = get_transaction_value();
+
+    
+    ESP_LOGI(UI_TAG, "=====================================");
+    ESP_LOGI(UI_TAG, " FUEL: %s (Nozzle %d)", active_data->fuel_type, active_data->nozzle_id);
+    ESP_LOGI(UI_TAG, " MODE: %s", (mode == MODE_AMOUNT) ? "By Amount" : "By Volume");
+    ESP_LOGI(UI_TAG, " VALUE: %.2f", entered_value);
+    ESP_LOGI(UI_TAG, "=====================================");
+
     
     if (active_data == NULL || objects.confirm_screen == NULL) {
         ESP_LOGE(UI_TAG, "Cannot load Confirm Screen: Data missing.");
@@ -566,7 +563,7 @@ void nozzle_monitor_task(void *pvParameters) {
         start_live_data_monitor(); // Start monitoring live data in the background
 
         if (is_nozzle_picked_up()) {
-            ESP_LOGW("UI_TAG", "Nozzle picked up. Transitioning screen.");
+            ESP_LOGW(TAG, "Nozzle picked up. Transitioning screen.");
             
             // It is safest to update UI elements on the main GUI thread
             transition_to_live_counting(); 
@@ -575,7 +572,7 @@ void nozzle_monitor_task(void *pvParameters) {
             vTaskDelete(NULL); 
         }
         // Yields control back to the CPU so other tasks can run
-        ESP_LOGW("UI_TAG", "Monitoring Nozzle pickup status.");
+        ESP_LOGW(TAG, "Monitoring Nozzle pickup status.");
 
         vTaskDelay(pdMS_TO_TICKS(500)); 
     }
@@ -628,7 +625,7 @@ void transition_to_live_counting(void){
 void refresh_live_counting_screen(void *pvParameters) {
     while (1) {
         if (is_nozzle_picked_up()) {
-            ESP_LOGW("UI_TAG", "Running Live Counting Screen Refresh Task.");
+            ESP_LOGW(TAG, "Running Live Counting Screen Refresh Task.");
             
             start_live_data_monitor(); // Start monitoring live data in the background            
             // Self-delete the task to free up memory
@@ -650,7 +647,7 @@ void refresh_live_counting_screen(void *pvParameters) {
         }
         else {
             
-            ESP_LOGW("UI_TAG", "Nozzle is down. Stopping Live Counting Screen Refresh Task.");
+            ESP_LOGW(TAG, "Nozzle is down. Stopping Live Counting Screen Refresh Task.");
             vTaskDelete(NULL); 
         }
         // Yields control back to the CPU so other tasks can run
@@ -708,6 +705,7 @@ static void startup_ui_task(void *pvParameter)
         ui_init(); // Boot the EEZ Studio generated code
 
         init_system_header();
+        init_numpad();
 
         transition_to_display_select_screen();
 

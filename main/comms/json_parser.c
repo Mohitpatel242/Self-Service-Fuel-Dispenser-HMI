@@ -12,7 +12,7 @@ static const char* TAG = "JSON_PARSER";
 // Bridge to the UI layer to safely update the screen dynamically
 extern void refresh_dynamic_panels(void);
 extern void transition_to_display_select_screen(void); // CHANGED: Bypasses dispenser selection screen
-extern bool is_ui_booting(void); 
+extern bool is_ui_booting(void);
 
 bool parse_live_data(const char* raw_json) 
 {
@@ -25,6 +25,7 @@ bool parse_live_data(const char* raw_json)
     }
 
     cJSON *dispenser_obj = cJSON_GetObjectItem(root, "DISPENSER");
+
     if (!dispenser_obj) {
         ESP_LOGE(TAG, "Missing standard DISPENSER object in testing payload.");
         cJSON_Delete(root);
@@ -37,20 +38,25 @@ bool parse_live_data(const char* raw_json)
         return false;
     }
 
-    cJSON *disp_id_obj = cJSON_GetObjectItem(dispenser_obj, "DISPENSER_ID");
     cJSON *disp_sn_obj = cJSON_GetObjectItem(dispenser_obj, "DISPENSER_SERIAL_NUMBER");
+    cJSON *disp_id_obj = cJSON_GetObjectItem(dispenser_obj, "DISPENSER_ID");
     cJSON *disp_cnt_obj = cJSON_GetObjectItem(dispenser_obj, "DISPLAY_COUNT");
     
     int parsed_id = (disp_id_obj) ? disp_id_obj->valueint : 1;
     int sub_display_count = (disp_cnt_obj) ? disp_cnt_obj->valueint : 1;
     char sn_str[32] = "N/A";
 
+
     if (disp_sn_obj) {
         if (cJSON_IsNumber(disp_sn_obj)) {
             snprintf(sn_str, sizeof(sn_str), "%d", disp_sn_obj->valueint);
-        } else if (disp_sn_obj->valuestring) {
-            strncpy(sn_str, disp_sn_obj->valuestring, sizeof(sn_str)-1);
+        }else {
+            ESP_LOGW(TAG, "DISPENSER_SERIAL_NUMBER is not a number.");
         }
+        
+        // else if (disp_sn_obj->valuestring) {
+        //     strncpy(sn_str, disp_sn_obj->valuestring, sizeof(sn_str)-1);
+        // }
     }
 
     // Ingestion: Register the single dispenser entry (maps safely to database index 0)
@@ -58,14 +64,21 @@ bool parse_live_data(const char* raw_json)
     
     if (du_idx != -1) {
         cJSON *du_status = cJSON_GetObjectItem(dispenser_obj, "DU_STATUS");
+
+
         if (du_status) {
-            for (int d = 1; d <= sub_display_count; d++) {
+            for (int display_idx = 1; display_idx <= sub_display_count; display_idx++) {
                 // FIXED: Increased size to 32 bytes to completely stop format truncation errors
                 char disp_node_key[32]; 
-                snprintf(disp_node_key, sizeof(disp_node_key), "DISPLAY_%d", d);
+                snprintf(disp_node_key, sizeof(disp_node_key), "DISPLAY_%d", display_idx);
                 
+                //==================================================================================================================================================== 
+
                 cJSON *display_node = cJSON_GetObjectItem(du_status, disp_node_key);
                 if (!display_node) continue;
+                
+                cJSON *display_pos_id_obj = cJSON_GetObjectItem(display_node, "DISPLAY_POS_ID");
+                int display_pos_id = (display_pos_id_obj) ? display_pos_id_obj->valueint : 1;
 
                 cJSON *status_obj = cJSON_GetObjectItem(display_node, "STATUS");
                 const char* status_txt = (status_obj && status_obj->valuestring) ? status_obj->valuestring : "IDLE";
@@ -79,27 +92,37 @@ bool parse_live_data(const char* raw_json)
                 cJSON *trans_running_status_obj = cJSON_GetObjectItem(display_node, "TRANS_RUNNING_STATUS");
                 const char* trans_running_status_txt = (trans_running_status_obj && trans_running_status_obj->valuestring) ? trans_running_status_obj->valuestring : "DISABLE";
 
-                update_display_node(du_idx, d, status_txt, running_amt_txt, running_qty_txt, trans_running_status_txt);
+                update_display_node(du_idx, display_idx, display_pos_id, status_txt, running_amt_txt, running_qty_txt, trans_running_status_txt);
 
                 cJSON *noz_cnt_obj = cJSON_GetObjectItem(display_node, "NOZZLE_COUNT");
                 int loop_nozzle_count = (noz_cnt_obj) ? noz_cnt_obj->valueint : 4;
 
-                for (int n = 1; n <= loop_nozzle_count; n++) {
+
+                //====================================================================================================================================================
+
+
+                for (int nozzle_idx = 1; nozzle_idx <= loop_nozzle_count; nozzle_idx++) {
                     // FIXED: Increased size to 32 bytes to completely stop format truncation errors
                     char noz_key[32]; 
-                    snprintf(noz_key, sizeof(noz_key), "NOZZLE_%d", n);
+                    snprintf(noz_key, sizeof(noz_key), "NOZZLE_%d", nozzle_idx);
+
                     
                     cJSON *noz_obj = cJSON_GetObjectItem(display_node, noz_key);
                     if (!noz_obj) continue;
+                    
+                    cJSON *nozzle_pos_id_obj = cJSON_GetObjectItem(noz_obj, "NOZZLE_POS_ID");
+                    int nozzle_pos_id = (nozzle_pos_id_obj) ? nozzle_pos_id_obj->valueint : 1;
+
+                    printf("Processing Display %d: nozzle_pos_id=%d\n", display_pos_id, nozzle_pos_id);
 
                     cJSON *fuel_type = cJSON_GetObjectItem(noz_obj, "FUEL_TYPE");
                     cJSON *rate_obj = cJSON_GetObjectItem(noz_obj, "RATE");
                     cJSON *density_obj = cJSON_GetObjectItem(noz_obj, "DENSITY");
-
+                    
                     if (fuel_type && fuel_type->valuestring) {
                         float parsed_rate = 0.0f;
                         float parsed_density = 0.0f;
-
+                        
                         if (rate_obj) {
                             parsed_rate = (rate_obj->valuestring) ? (float)atof(rate_obj->valuestring) : (float)rate_obj->valuedouble;
                         }
@@ -107,7 +130,7 @@ bool parse_live_data(const char* raw_json)
                             parsed_density = (density_obj->valuestring) ? (float)atof(density_obj->valuestring) : (float)density_obj->valuedouble;
                         }
 
-                        update_nozzle_node(du_idx, d, n, 
+                        update_nozzle_node(du_idx, display_idx, nozzle_idx, nozzle_pos_id,
                                            fuel_type->valuestring, 
                                            parsed_rate, 
                                            parsed_density);
@@ -125,7 +148,7 @@ bool parse_live_data(const char* raw_json)
     print_station_model_registry();
 
     // Hide any showing loader animations
-    hide_loading_overlay(); 
+    // hide_loading_overlay(); 
         
     // 4. TRIGGER UI UPDATE: Bypass dispenser selection screen if booting up
     if (is_ui_booting()) {

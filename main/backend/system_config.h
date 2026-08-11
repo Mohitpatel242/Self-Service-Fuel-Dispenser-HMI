@@ -4,8 +4,6 @@
 
 typedef struct {
     char company_name[64];
-    char dispenser_id[16];
-    char serial_number[32];
     char upi_id[64]; // NEW: For receiving payments
     char target_url[128]; // NEW: For API endpoint
     char ssid[32]; // NEW: For Wi-Fi SSID

@@ -15,6 +15,7 @@
 
 typedef struct {
     int nozzle_id;
+    int nozzle_pos_id; // New field to store the nozzle position ID
     char fuel_type[16];
     float rate;
     float density;
@@ -22,7 +23,9 @@ typedef struct {
 } NozzleNode;
 
 typedef struct {
+    // int display_index;
     int display_id;
+    int display_pos_id; // New field to store the display position ID
     char status[32];
     int nozzle_count;
     char running_transaction_amt[32];
@@ -34,6 +37,8 @@ typedef struct {
 
 typedef struct {
     int dispenser_index;
+    int dispenser_id;
+    // int dispenser_index;
     char serial_number[32];
     int display_count;
     DisplayNode displays[MAX_DISPLAYS_PER_DU];
@@ -65,14 +70,13 @@ void station_model_init(void);
 
 // --- Deep Insertion Data Update API (Used by JSON Parser) ---
 int register_or_get_dispenser(int dispenser_index, const char* serial_number, int display_count);
-bool update_display_node(int du_idx, int display_id, const char* status, const char* running_transaction_amt, const char* running_transaction_qty, const char* trans_running_status);
-bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, const char* fuel_type, float rate, float density);
+bool update_display_node(int du_idx, int display_id, int display_pos_id, const char* status, const char* running_transaction_amt, const char* running_transaction_qty, const char* trans_running_status);
+bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, int nozzle_pos_id, const char* fuel_type, float rate, float density);
+
 
 // --- System Debug API ---
 void print_station_model_registry(void);
 int station_model_get_total_dispensers(void);
-
-
 
 
 //=====================================================================================================================================================
@@ -133,7 +137,5 @@ float get_transaction_value(void);
 
 void set_payment_method(PaymentMethod method);
 PaymentMethod get_payment_method(void);
-
-
 
 bool is_nozzle_picked_up(void);

@@ -12,6 +12,8 @@ unsigned int get_shine(unsigned int color, float factor);
 void live_clock_timer_cb(lv_timer_t * timer);
 void init_system_header(void) ;
 
+void init_numpad(void);
+
 void create_loading_overlay(void);
 
 

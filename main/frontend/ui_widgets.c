@@ -785,6 +785,39 @@ void create_nozzle_widget(lv_obj_t * parent_obj, NozzleNode * data)
 //======================================================================================================================================================================================================================
 
 
+
+void init_numpad(void) {
+
+    // Define your custom map safely in your main execution file 
+    static const char * my_isolated_kb_map[] = {
+        "1", "2", "3", "\n",
+        "4", "5", "6", "\n",
+        "7", "8", "9", "\n",
+        LV_SYMBOL_BACKSPACE, "0", ".", LV_SYMBOL_OK, 
+        NULL 
+    };
+
+    static const lv_btnmatrix_ctrl_t my_isolated_kb_ctrl[] = {
+        1, 1, 1,      
+        1, 1, 1,      
+        1, 1, 1,      
+        1, 1, 1, 1       
+    };
+
+
+    // 2. Target only the specific object using its distinct variable name
+    if(objects.numpad_screen_keyboard) {
+        // Change the active mode to your isolated user mode
+        lv_keyboard_set_mode(objects.numpad_screen_keyboard, LV_KEYBOARD_MODE_USER_1);
+        
+        // Apply the layout override exclusively to this instance
+        lv_keyboard_set_map(objects.numpad_screen_keyboard, LV_KEYBOARD_MODE_USER_1, my_isolated_kb_map, my_isolated_kb_ctrl);
+    }
+    
+    // Standard standard number pads (e.g., objects.numpad_screen_keyboard) remain unaffected!
+}
+
+
 //======================================================================================================================================================================================================================
 
 

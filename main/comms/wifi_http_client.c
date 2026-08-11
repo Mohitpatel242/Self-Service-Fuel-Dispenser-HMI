@@ -156,7 +156,6 @@ void wifi_network_init(const char* ssid, const char* password)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
-
 void start_live_data_monitor(void) 
 {
     // Spin up the background task with a generous stack size for HTTP processing

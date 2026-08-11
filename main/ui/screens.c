@@ -1129,12 +1129,12 @@ void create_screen_numpad_screen() {
     {
         lv_obj_t *parent_obj = obj;
         {
-            // NumpadScreen_keyboard
+            // numpad_screen_keyboard
             lv_obj_t *obj = lv_keyboard_create(parent_obj);
             objects.numpad_screen_keyboard = obj;
             lv_obj_set_pos(obj, 190, -28);
             lv_obj_set_size(obj, 380, 384);
-            lv_keyboard_set_mode(obj, LV_KEYBOARD_MODE_NUMBER);
+            lv_keyboard_set_mode(obj, LV_KEYBOARD_MODE_USER_1);
             lv_obj_add_event_cb(obj, action_numpad_ready, LV_EVENT_READY, (void *)0);
             lv_obj_set_style_bg_color(obj, lv_color_hex(theme_colors[active_theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_bg_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);

@@ -13,21 +13,23 @@ static const char *TAG = "COMMS_POST";
 static void http_post_pump_control_task(void *pvParameters) 
 {
     // 1. SAFELY EXTRACT ALL REQUIRED DATA FROM BACKEND
-    int display_id = 0;
+    int8_t display_pos_id = 0;
     char du_serial[32] = "";
-    int nozzle_id = 0;
+    int8_t nozzle_pos_id = 0;
+    int32_t display_serial_number = 0;
     DispenseMode tx_mode = MODE_NONE;
     float tx_value = 0.0f;
     PaymentMethod tx_pay_method = PAYMENT_NONE;
 
     if (lock_station_model()) {
-        DisplayNode* disp = get_active_display();
         DispenserNode* du = get_active_dispenser();
+        DisplayNode* disp = get_active_display();
         NozzleNode* noz = get_active_nozzle();
 
-        if (disp) display_id = disp->display_id;
         if (du) strncpy(du_serial, du->serial_number, sizeof(du_serial) - 1);
-        if (noz) nozzle_id = noz->nozzle_id;
+        if (disp) display_pos_id = disp->display_pos_id;
+        // if (disp) display_serial_number = disp->serial_number;
+        if (noz) nozzle_pos_id = noz->nozzle_pos_id;
         
         tx_mode = get_transaction_mode();
         tx_value = get_transaction_value();
@@ -46,8 +48,8 @@ static void http_post_pump_control_task(void *pvParameters)
     char preset_val_str[16];
     snprintf(preset_val_str, sizeof(preset_val_str), "%.2f", tx_value);
 
-    char noz_id_str[16];
-    snprintf(noz_id_str, sizeof(noz_id_str), "%d", nozzle_id);
+    char noz_pos_id_str[16];
+    snprintf(noz_pos_id_str, sizeof(noz_pos_id_str), "%d", nozzle_pos_id);
 
     // 3. BUILD THE EXACT cJSON STRUCTURE
     cJSON *root = cJSON_CreateObject();
@@ -62,10 +64,10 @@ static void http_post_pump_control_task(void *pvParameters)
     cJSON_AddStringToObject(select_preset, "OVERRIDE", "DISABLE");
 
     // Populate PUMP_CONTROL
-    cJSON_AddNumberToObject(pump_control, "DISPLAY_POS_ID", display_id);
+    cJSON_AddNumberToObject(pump_control, "DISPLAY_POS_ID", display_pos_id);
     cJSON_AddStringToObject(pump_control, "DISPENSER_SERIAL_NUMBER", du_serial);
-    cJSON_AddStringToObject(pump_control, "NOZZLE_POS_ID", noz_id_str);
-    cJSON_AddNumberToObject(pump_control, "DISPLAY_SERIAL_NUMBER", 12000000); // Or fetch dynamically if available
+    cJSON_AddNumberToObject(pump_control, "NOZZLE_POS_ID", nozzle_pos_id);
+    // cJSON_AddNumberToObject(pump_control, "DISPLAY_SERIAL_NUMBER", display_serial_number); 
     
     // Assemble hierarchy
     cJSON_AddItemToObject(pump_control, "SELECT_PRESET", select_preset);

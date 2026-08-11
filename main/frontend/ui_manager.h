@@ -43,8 +43,8 @@ void refresh_dynamic_panels(void);
 void transition_to_live_counting(void);
 
 
-void show_loading_overlay(const char *message);
-void hide_loading_overlay(void);
+// void show_loading_overlay(const char *message);
+// void hide_loading_overlay(void);
 bool is_ui_booting(void);
 
 

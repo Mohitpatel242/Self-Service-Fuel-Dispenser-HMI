@@ -84,7 +84,7 @@ int register_or_get_dispenser(int dispenser_index, const char* serial_number, in
 
 
 
-bool update_display_node(int du_idx, int display_id, const char* status, const char* running_transaction_amt, const char* running_transaction_qty, const char* trans_running_status ) 
+bool update_display_node(int du_idx, int display_id, int display_pos_id, const char* status, const char* running_transaction_amt, const char* running_transaction_qty, const char* trans_running_status ) 
 {
     if (du_idx < 0 || du_idx >= registry.dispenser_count) return false;
     int d_idx = display_id - 1;
@@ -92,6 +92,7 @@ bool update_display_node(int du_idx, int display_id, const char* status, const c
 
     DisplayNode *disp = &registry.dispensers[du_idx].displays[d_idx];
     disp->display_id = display_id;
+    disp->display_pos_id = display_pos_id;
 
     if (status) {
         strncpy(disp->status, status, sizeof(disp->status) - 1);
@@ -112,7 +113,7 @@ bool update_display_node(int du_idx, int display_id, const char* status, const c
     return true;
 }
 
-bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, const char* fuel_type, float rate, float density) 
+bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, int nozzle_pos_id, const char* fuel_type, float rate, float density) 
 {
     if (du_idx < 0 || du_idx >= registry.dispenser_count) return false;
     int d_idx = display_id - 1;
@@ -138,6 +139,7 @@ bool update_nozzle_node(int du_idx, int display_id, int nozzle_id, const char* f
 
     NozzleNode *noz = &disp->nozzles[n_idx];
     noz->nozzle_id = nozzle_id;
+    noz->nozzle_pos_id = nozzle_pos_id;
     noz->rate = rate;
     noz->density = density;
     
@@ -294,7 +296,7 @@ int get_current_display_count(void)
         
         }else{
 
-            ESP_LOGW(TAG, " \"DispenserNode *dis = get_active_dispenser();\" is NULL " );
+            ESP_LOGE(TAG, " \"DispenserNode *dis = get_active_dispenser();\" is NULL " );
         }         
         unlock_station_model();
     }

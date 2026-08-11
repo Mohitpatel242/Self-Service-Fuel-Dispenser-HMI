@@ -101,15 +101,15 @@ void action_numpad_ready(lv_event_t * e)
     // 3. Save the final value to the Backend
     set_transaction_value(entered_value);
     
-    // 4. Log the transaction details so far!
-    NozzleNode * active_nozzle = get_active_nozzle();
-    DispenseMode mode = get_transaction_mode();
+    // // 4. Log the transaction details so far!
+    // NozzleNode * active_nozzle = get_active_nozzle();
+    // DispenseMode mode = get_transaction_mode();
     
-    ESP_LOGI("TRANSACTION", "=====================================");
-    ESP_LOGI("TRANSACTION", " FUEL: %s (Nozzle %d)", active_nozzle->fuel_type, active_nozzle->nozzle_id);
-    ESP_LOGI("TRANSACTION", " MODE: %s", (mode == MODE_AMOUNT) ? "By Amount" : "By Volume");
-    ESP_LOGI("TRANSACTION", " VALUE: %.2f", entered_value);
-    ESP_LOGI("TRANSACTION", "=====================================");
+    // ESP_LOGI("TRANSACTION", "=====================================");
+    // ESP_LOGI("TRANSACTION", " FUEL: %s (Nozzle %d)", active_nozzle->fuel_type, active_nozzle->nozzle_id);
+    // ESP_LOGI("TRANSACTION", " MODE: %s", (mode == MODE_AMOUNT) ? "By Amount" : "By Volume");
+    // ESP_LOGI("TRANSACTION", " VALUE: %.2f", entered_value);
+    // ESP_LOGI("TRANSACTION", "=====================================");
 
 
     // Trigger the transition function we just wrote!
