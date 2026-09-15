@@ -563,7 +563,7 @@ void nozzle_monitor_task(void *pvParameters) {
         start_live_data_monitor(); // Start monitoring live data in the background
 
         if (is_nozzle_picked_up()) {
-            ESP_LOGW(TAG, "Nozzle picked up. Transitioning screen.");
+            ESP_LOGW(UI_TAG, "Nozzle picked up. Transitioning screen.");
             
             // It is safest to update UI elements on the main GUI thread
             transition_to_live_counting(); 
@@ -572,7 +572,7 @@ void nozzle_monitor_task(void *pvParameters) {
             vTaskDelete(NULL); 
         }
         // Yields control back to the CPU so other tasks can run
-        ESP_LOGW(TAG, "Monitoring Nozzle pickup status.");
+        ESP_LOGW(UI_TAG, "Monitoring Nozzle pickup status.");
 
         vTaskDelay(pdMS_TO_TICKS(500)); 
     }
@@ -625,7 +625,7 @@ void transition_to_live_counting(void){
 void refresh_live_counting_screen(void *pvParameters) {
     while (1) {
         if (is_nozzle_picked_up()) {
-            ESP_LOGW(TAG, "Running Live Counting Screen Refresh Task.");
+            ESP_LOGW(UI_TAG, "Running Live Counting Screen Refresh Task.");
             
             start_live_data_monitor(); // Start monitoring live data in the background            
             // Self-delete the task to free up memory
@@ -647,7 +647,14 @@ void refresh_live_counting_screen(void *pvParameters) {
         }
         else {
             
-            ESP_LOGW(TAG, "Nozzle is down. Stopping Live Counting Screen Refresh Task.");
+            ESP_LOGW(UI_TAG, "[refresh_live_counting_screen] : Nozzle is down. Stopping Live Counting Screen Refresh Task.");
+            ESP_LOGI(UI_TAG, " [refresh_live_counting_screen] : Transitioning to Thank You Screen.");
+            transition_to_thank_you_screen();
+            if (objects.thank_you_screen == NULL){
+                ESP_LOGE(UI_TAG, "Cannot load screen: thank you screen is missing.");
+                return;
+            }
+            
             vTaskDelete(NULL); 
         }
         // Yields control back to the CPU so other tasks can run
@@ -656,6 +663,25 @@ void refresh_live_counting_screen(void *pvParameters) {
 }
 
 
+
+
+void transition_to_thank_you_screen(void){
+
+    if (objects.thank_you_screen == NULL){
+        ESP_LOGE(UI_TAG, "Cannot load screen: thank you screen is missing.");
+        return;
+    } 
+
+    ESP_LOGI(UI_TAG, " [transition_to_thank_you_screen] : Transitioning to Thank You Screen.");
+    // 3. Perform the actual screen switch!
+    lv_scr_load(objects.thank_you_screen);
+
+    vTaskDelay(pdMS_TO_TICKS(4000)); // Wait for 3 seconds before transitioning back to the main screen
+
+    transition_to_display_select_screen(); // Transition back to the main screen after the delay
+    ESP_LOGI(UI_TAG, " [transition_to_thank_you_screen] : Transitioning back to Display Select Screen.");
+
+}
 
 
 void transition_to_login_screen(){
@@ -677,10 +703,7 @@ void transition_to_login_screen(){
         ESP_LOGE(UI_TAG, "ERROR while loading login screen");
         
     }
-
-
 }
-
 
 
 void transition_to_config_screen(void)
@@ -691,8 +714,6 @@ void transition_to_config_screen(void)
         lvgl_port_unlock();
     }
 }
-
-
 
 // 3. The Thread-Safe Startup Task
 static void startup_ui_task(void *pvParameter) 

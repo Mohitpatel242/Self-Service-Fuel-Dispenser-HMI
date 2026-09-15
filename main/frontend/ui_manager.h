@@ -38,6 +38,7 @@ void transition_to_numpad(DispenseMode mode);
 void transition_to_confirm(void);
 void transition_to_qr_screen(void);
 void transition_to_nozzle_pikup(void);
+void transition_to_thank_you_screen(void);
 
 void refresh_dynamic_panels(void);
 void transition_to_live_counting(void);
